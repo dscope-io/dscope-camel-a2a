@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.dscope.camel</groupId>
+    <artifactId>camel-a2a-samples</artifactId>
+    <version>0.5.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>camel-a2a-sample-a2a-yaml-service</artifactId>
+  <name>Camel A2A Component - Sample :: A2A YAML Service</name>
+  <description>Sample application demonstrating the A2A Camel component with YAML-based routes</description>
+
+  <dependencies>
+    <!-- Component dependency -->
+    <dependency>
+      <groupId>io.dscope.camel</groupId>
+      <artifactId>camel-a2a-component</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Additional dependencies for samples -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-main</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-yaml-dsl</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>io.dscope.camel.a2a.samples.Main</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

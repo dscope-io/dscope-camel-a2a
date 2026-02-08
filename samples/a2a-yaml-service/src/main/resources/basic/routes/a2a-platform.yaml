@@ -1,0 +1,22 @@
+# Health route
+- from:
+    uri: "undertow:http://0.0.0.0:8080/health?httpMethodRestrict=GET"
+    steps:
+      - setBody:
+          constant: '{"status":"UP"}'
+
+# A2A WS route
+- from:
+    uri: "a2a://self?serverUrl=ws://0.0.0.0:8081/a2a"
+    steps:
+      - log:
+          message: "Received WS message: ${body}"
+
+# Example tool route
+- from:
+    uri: "direct:echo"
+    steps:
+      - log:
+          message: "Echo: ${body}"
+      - setBody:
+          simple: '{"echo": "${body}"}'

@@ -1,0 +1,12 @@
+io/dscope/camel/a2a/A2AComponent.class
+io/dscope/camel/a2a/IntentRouterProcessor.class
+io/dscope/camel/a2a/A2AEndpoint.class
+io/dscope/camel/a2a/A2AConsumer$1.class
+io/dscope/camel/a2a/A2AConfiguration.class
+io/dscope/camel/a2a/JsonRpcError.class
+io/dscope/camel/a2a/A2AToolRegistry.class
+io/dscope/camel/a2a/A2AJsonCodec.class
+io/dscope/camel/a2a/A2AProducer.class
+io/dscope/camel/a2a/A2AMessage.class
+io/dscope/camel/a2a/A2AToolRegistry$ToolDef.class
+io/dscope/camel/a2a/A2AConsumer.class

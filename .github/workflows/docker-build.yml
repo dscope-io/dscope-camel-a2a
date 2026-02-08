@@ -1,0 +1,9 @@
+name: Build Docker Image
+on: { workflow_dispatch: {} }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: mvn -q -DskipTests package

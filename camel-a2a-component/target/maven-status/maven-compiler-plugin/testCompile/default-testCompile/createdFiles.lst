@@ -1,0 +1,11 @@
+io/dscope/camel/a2a/A2AJsonCodecTest.class
+io/dscope/camel/a2a/A2AMessageTest.class
+io/dscope/camel/a2a/A2AJsonCodecTest$Sample.class
+io/dscope/camel/a2a/JsonRpcErrorTest.class
+io/dscope/camel/a2a/A2AComponentTest.class
+io/dscope/camel/a2a/A2AConsumerTest.class
+io/dscope/camel/a2a/A2AConfigurationTest.class
+io/dscope/camel/a2a/A2AToolRegistryTest.class
+io/dscope/camel/a2a/IntentRouterProcessorTest.class
+io/dscope/camel/a2a/A2AEndpointTest.class
+io/dscope/camel/a2a/A2AProducerTest.class

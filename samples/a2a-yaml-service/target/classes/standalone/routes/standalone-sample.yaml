@@ -1,0 +1,27 @@
+# Standalone A2A sample routes
+# This sample demonstrates a minimal A2A setup with custom configuration
+
+# Health check route
+- from:
+    uri: "undertow:http://0.0.0.0:8080/health?httpMethodRestrict=GET"
+    steps:
+      - setBody:
+          constant: '{"status":"UP","sample":"standalone"}'
+
+# A2A WebSocket route with custom configuration
+- from:
+    uri: "a2a://standalone?serverUrl=ws://0.0.0.0:8082/a2a&protocolVersion=a2a/2025-01-01"
+    steps:
+      - log:
+          message: "Standalone A2A: Received message: ${body}"
+      - setBody:
+          simple: '{"response":"received","sample":"standalone","timestamp":"${date:now:yyyy-MM-dd HH:mm:ss}"}'
+
+# Direct route for testing
+- from:
+    uri: "direct:standalone-test"
+    steps:
+      - log:
+          message: "Standalone test route: ${body}"
+      - setBody:
+          simple: '{"result":"standalone-test","input":"${body}"}'
