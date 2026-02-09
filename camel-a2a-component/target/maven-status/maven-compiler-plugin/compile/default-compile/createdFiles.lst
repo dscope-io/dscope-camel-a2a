@@ -46,6 +46,7 @@ io/dscope/camel/a2a/service/A2APushNotificationConfigService.class
 io/dscope/camel/a2a/model/dto/GetTaskRequest.class
 io/dscope/camel/a2a/service/A2AJsonCodec.class
 io/dscope/camel/a2a/service/A2ATaskService.class
+io/dscope/camel/a2a/A2AEndpointUriFactory.class
 io/dscope/camel/a2a/A2AComponentApplicationSupport$BeanBinder.class
 io/dscope/camel/a2a/A2AJsonCodec.class
 io/dscope/camel/a2a/processor/SendStreamingMessageProcessor.class
@@ -62,9 +63,11 @@ io/dscope/camel/a2a/processor/ListTasksProcessor.class
 io/dscope/camel/a2a/service/A2AConsumerRouteService$1.class
 io/dscope/camel/a2a/model/AgentCapabilities.class
 io/dscope/camel/a2a/catalog/A2AToolRegistry$ToolDef.class
+io/dscope/camel/a2a/A2AEndpointConfigurer.class
 io/dscope/camel/a2a/model/dto/SubscribeToTaskResponse.class
 io/dscope/camel/a2a/processor/A2ADiagnosticsProcessor.class
 io/dscope/camel/a2a/processor/A2AErrorProcessor.class
+io/dscope/camel/a2a/A2AComponentConfigurer.class
 io/dscope/camel/a2a/catalog/AgentCardPolicyChecker.class
 io/dscope/camel/a2a/processor/DeletePushNotificationConfigProcessor.class
 io/dscope/camel/a2a/model/Artifact.class

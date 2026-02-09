@@ -1,16 +1,30 @@
 package io.dscope.camel.a2a;
 
+import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.spi.UriEndpoint;
+import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
  * Camel endpoint for A2A (Agent-to-Agent) communication.
  * Supports both producing messages to A2A servers and consuming messages from them.
  */
+@UriEndpoint(
+    firstVersion = "0.5.0",
+    scheme = "a2a",
+    title = "A2A",
+    syntax = "a2a:agent",
+    remote = true,
+    category = {Category.RPC, Category.AI}
+)
 public class A2AEndpoint extends DefaultEndpoint {
+
+    @UriPath(description = "Target agent identifier")
+    private String agent;
 
     /** Configuration for this endpoint */
     private final A2AConfiguration cfg;
@@ -30,6 +44,8 @@ public class A2AEndpoint extends DefaultEndpoint {
     public A2AEndpoint(String uri, Component c, A2AConfiguration cfg, String remaining) {
         super(uri, c);
         this.cfg = cfg;
+        this.agent = remaining;
+        this.cfg.setAgent(remaining);
         this.remaining = remaining;
     }
 
@@ -71,5 +87,14 @@ public class A2AEndpoint extends DefaultEndpoint {
      */
     public A2AConfiguration getConfiguration() {
         return cfg;
+    }
+
+    public String getAgent() {
+        return agent;
+    }
+
+    public void setAgent(String agent) {
+        this.agent = agent;
+        this.cfg.setAgent(agent);
     }
 }

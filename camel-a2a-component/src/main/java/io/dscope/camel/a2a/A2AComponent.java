@@ -1,6 +1,7 @@
 package io.dscope.camel.a2a;
 
 import org.apache.camel.Endpoint;
+import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import java.util.Map;
  * Camel component for A2A (Agent-to-Agent) communication.
  * Provides endpoints for WebSocket-based A2A message exchange.
  */
+@Component("a2a")
 public class A2AComponent extends DefaultComponent {
 
     /**
