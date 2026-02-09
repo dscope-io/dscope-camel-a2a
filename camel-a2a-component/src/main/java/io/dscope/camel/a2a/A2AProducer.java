@@ -2,6 +2,7 @@ package io.dscope.camel.a2a;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultProducer;
+import io.dscope.camel.a2a.processor.A2AOutgoingMessageProcessor;
 
 /**
  * Producer for sending messages to A2A endpoints.
@@ -13,8 +14,8 @@ public class A2AProducer extends DefaultProducer {
     @SuppressWarnings("unused")
     private final A2AEndpoint ep;
 
-    /** JSON codec for message serialization */
-    private final A2AJsonCodec codec = new A2AJsonCodec();
+    /** Outgoing request processor used to generate protocol envelopes. */
+    private final A2AOutgoingMessageProcessor outgoingMessageProcessor;
 
     /**
      * Creates a new A2A producer.
@@ -24,6 +25,7 @@ public class A2AProducer extends DefaultProducer {
     public A2AProducer(A2AEndpoint ep) {
         super(ep);
         this.ep = ep;
+        this.outgoingMessageProcessor = new A2AOutgoingMessageProcessor();
     }
 
     /**
@@ -35,8 +37,6 @@ public class A2AProducer extends DefaultProducer {
      */
     @Override
     public void process(Exchange ex) throws Exception {
-        A2AMessage msg = A2AMessage.request("intent/execute", ex.getIn().getBody());
-        String json = codec.serialize(msg);
-        ex.getMessage().setBody(json);
+        outgoingMessageProcessor.process(ex);
     }
 }

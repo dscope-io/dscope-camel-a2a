@@ -4,495 +4,233 @@
 [![Apache Camel](https://img.shields.io/badge/Apache%20Camel-4.15.0-blue)](https://camel.apache.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A comprehensive Apache Camel component for Agent-to-Agent (A2A) communication using JSON-RPC 2.0 over WebSocket connections. This component enables seamless integration between AI agents, microservices, and distributed systems through standardized message passing.
+Apache Camel component and sample runtime for Agent-to-Agent (A2A) protocol workflows.
+
+This repository provides:
+
+- A reusable Camel component (`a2a:`) for producer/consumer integration.
+- A protocol service runtime with JSON-RPC 2.0, task lifecycle methods, SSE streaming, push notification config APIs, and agent card discovery.
+- A sample YAML-based service that exposes a practical HTTP surface for local testing and integration.
 
 ## Table of Contents
 
-- [Features](#features)
-- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [What You Get](#what-you-get)
+- [Supported Methods](#supported-methods)
 - [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [API Reference](#api-reference)
-- [Examples](#examples)
-- [Building](#building)
-- [Contributing](#contributing)
+- [Runtime Endpoints](#runtime-endpoints)
+- [Manual Smoke Test](#manual-smoke-test)
+- [Camel Component URI Options](#camel-component-uri-options)
+- [Build and Test](#build-and-test)
+- [Documentation](#documentation)
 - [License](#license)
 
-## Features
+## Project Structure
 
-- **JSON-RPC 2.0 Protocol**: Full compliance with JSON-RPC 2.0 specification for structured message exchange
-- **WebSocket Transport**: Real-time bidirectional communication over WebSocket connections
-- **Camel Integration**: Native Apache Camel component with producer/consumer patterns
-- **Intent-Based Routing**: Message routing based on method names and parameters
-- **Tool Registry**: Dynamic registration and discovery of available tools/functions
-- **Error Handling**: Comprehensive error response generation with fallback mechanisms
-- **YAML Route Configuration**: Declarative route definition using Camel YAML DSL
-- **Health Monitoring**: Built-in health check endpoints for service monitoring
-- **Authentication Support**: Token-based authentication for secure communication
-- **Retry Logic**: Configurable retry mechanisms for reliable message delivery
-
-## Architecture
-
-### Core Components
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   A2A Producer  │    │  A2A Component  │    │  A2A Consumer   │
-│                 │    │                 │    │                 │
-│ • Message       │◄──►│ • Endpoint      │◄──►│ • WebSocket     │
-│   Creation      │    │   Management    │    │   Server        │
-│ • JSON          │    │ • Configuration │    │ • Message       │
-│   Serialization │    │ • Routing       │    │   Processing    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │  Tool Registry  │
-                    │                 │
-                    │ • Tool          │
-                    │   Registration  │
-                    │ • Discovery     │
-                    │ • Metadata      │
-                    └─────────────────┘
+```text
+camel-a2a/
+|- pom.xml                                  # Root aggregator
+|- camel-a2a-component/                     # Core component + protocol implementation
+|  |- src/main/java/io/dscope/camel/a2a/
+|  |- src/main/java/io/dscope/camel/a2a/config/
+|  |- src/main/java/io/dscope/camel/a2a/processor/
+|  |- src/main/java/io/dscope/camel/a2a/service/
+|  |- src/main/java/io/dscope/camel/a2a/model/
+|  `- src/main/java/io/dscope/camel/a2a/catalog/
+|- samples/
+|  `- a2a-yaml-service/                     # Runnable sample runtime
+|     |- src/main/java/io/dscope/camel/a2a/samples/
+|     `- src/main/resources/
+|        |- basic/routes/a2a-platform.yaml
+|        `- standalone/routes/standalone-sample.yaml
+`- docs/
+   |- architecture.md
+   |- development.md
+   |- TEST_PLAN.md
+   `- PUBLISH_GUIDE.md
 ```
 
-### Message Flow
+## What You Get
 
-1. **Producer**: Converts Camel exchanges into JSON-RPC 2.0 requests
-2. **Transport**: WebSocket connection handles bidirectional communication
-3. **Consumer**: Receives messages and routes them through Camel processors
-4. **Registry**: Maintains available tools and their capabilities
+### Core Protocol Layer
+
+- JSON-RPC envelope parsing and validation via `A2AJsonRpcEnvelopeProcessor`.
+- Method dispatch via `A2AMethodDispatchProcessor`.
+- JSON-RPC error normalization via `A2AErrorProcessor`.
+- Canonical method set in `A2AProtocolMethods`.
+
+### Task and Streaming Layer
+
+- In-memory task lifecycle state machine via `InMemoryA2ATaskService`.
+- Task event sequencing and subscriptions via `InMemoryTaskEventService`.
+- SSE rendering via `A2ATaskSseProcessor`.
+
+### Push Notification Layer
+
+- CRUD methods for push configurations.
+- Retry and backoff controls.
+- Delivery stats surfaced in diagnostics.
+
+### Discovery Layer
+
+- Agent card discovery endpoint (`/.well-known/agent-card.json`).
+- Extended card retrieval method (`GetExtendedAgentCard`).
+
+### Runtime Bootstrap
+
+- `A2AComponentApplicationSupport` binds all default beans and method processors.
+- YAML route include validation and simple sample bootstrapping for both basic and standalone modes.
+
+## Supported Methods
+
+`POST /a2a/rpc` supports the following protocol methods:
+
+| Method | Required Params | Notes |
+|---|---|---|
+| `SendMessage` | `message` | Creates task and returns `task` |
+| `SendStreamingMessage` | `message` | Creates task, drives streaming state updates, returns `subscriptionId` and `streamUrl` |
+| `GetTask` | `taskId` | Returns task snapshot |
+| `ListTasks` | none | Optional `limit`, `state`, `cursor` |
+| `CancelTask` | `taskId` | Optional `reason` |
+| `SubscribeToTask` | `taskId` | Optional `afterSequence`, `limit` |
+| `CreatePushNotificationConfig` | `endpointUrl` | Optional `taskId`, retry/backoff, headers, metadata |
+| `GetPushNotificationConfig` | `configId` | Fetches config by id |
+| `ListPushNotificationConfigs` | none | Optional `taskId`, `limit` |
+| `DeletePushNotificationConfig` | `configId` | Returns deletion status |
+| `GetExtendedAgentCard` | none | Optional `includeSignature` (default `true`) |
+| `intent/execute` | implementation-dependent | Legacy compatibility method constant |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Java 21 or higher
+- Java 21+
 - Maven 3.6+
-- Apache Camel 4.15.0
 
-### Running the Demo
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd camel-a2a
-
-# Build and install locally (all modules)
-mvn clean install
-
-# Run the sample application (basic sample by default)
-cd samples/a2a-yaml-service
-mvn exec:java
-
-# Or run a specific sample
-mvn exec:java -Dexec.args="standalone"
-```
-
-The application will start:
-- Health check endpoint: `http://localhost:8080/health`
-- A2A WebSocket server: `ws://localhost:8081/a2a` (basic) or `ws://localhost:8082/a2a` (standalone)
-
-### Testing the Service
+### Build and Test
 
 ```bash
-# Health check
-curl http://localhost:8080/health
-# Response: {"status":"UP"}
-
-# WebSocket connection (using wscat or similar)
-wscat -c ws://localhost:8081/a2a
-# Send: {"jsonrpc":"2.0","method":"test","params":{},"id":"1"}
+mvn clean test
 ```
 
-## Sample Organization
-
-The samples are organized into subdirectories for better maintainability:
-
-```
-samples/
-├── pom.xml                                # Samples aggregator
-└── a2a-yaml-service/
-    ├── pom.xml                            # YAML service sample module
-    └── src/
-        ├── main/java/io/dscope/camel/a2a/samples/
-        │   ├── Main.java                  # Main entry point for all samples
-        │   ├── basic/                     # Basic A2A platform sample
-        │   │   └── Runner.java            # Basic sample implementation
-        │   └── standalone/                # Standalone minimal sample
-        │       └── Runner.java            # Standalone sample implementation
-        └── main/resources/
-            ├── basic/routes/
-            │   └── a2a-platform.yaml
-            └── standalone/routes/
-                └── standalone-sample.yaml
-```
-
-### Available Samples
-
-- **basic** (default): Basic A2A platform with health check and WebSocket endpoints
-- **standalone**: Minimal A2A setup with custom configuration and timestamp responses
-
-### Running Specific Samples
+### Run Sample Runtime
 
 ```bash
 cd samples/a2a-yaml-service
 
-# Run basic sample (default)
+# Default sample
 mvn exec:java
 
-# Run standalone sample
+# Standalone sample
 mvn exec:java -Dexec.args="standalone"
-
-# Run directly without main dispatcher
-mvn exec:java -Dexec.mainClass="io.dscope.camel.a2a.samples.basic.Runner"
-mvn exec:java -Dexec.mainClass="io.dscope.camel.a2a.samples.standalone.Runner"
 ```
 
-## Installation
+## Runtime Endpoints
 
-### Maven Dependency
+Both sample modes expose the same protocol surface:
 
-Add the following to your `pom.xml`:
+| Method | URL | Purpose |
+|---|---|---|
+| `GET` | `http://localhost:8080/health` | Health/liveness |
+| `GET` | `http://localhost:8080/diagnostics` | Runtime counters and supported methods |
+| `POST` | `http://localhost:8081/a2a/rpc` | JSON-RPC protocol entrypoint |
+| `GET` | `http://localhost:8081/a2a/sse/{taskId}` | Task event stream |
+| `GET` | `http://localhost:8081/.well-known/agent-card.json` | Agent card discovery |
 
-```xml
-<dependency>
-    <groupId>io.dscope.camel</groupId>
-    <artifactId>camel-a2a-component</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
-</dependency>
-```
+## Manual Smoke Test
 
-### Manual Installation
+Run sample first, then execute:
 
 ```bash
-# Build and install locally (all modules)
-mvn clean install
+# Health + diagnostics
+curl -s http://localhost:8080/health
+curl -s http://localhost:8080/diagnostics
 
-# Or build fat JAR for component
-mvn clean package -pl camel-a2a-component
+# SendMessage -> capture taskId
+SEND_RESPONSE=$(curl -s http://localhost:8081/a2a/rpc \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello"}]},"metadata":{"source":"curl"}},"id":"1"}')
+
+echo "$SEND_RESPONSE"
+TASK_ID=$(echo "$SEND_RESPONSE" | sed -n 's/.*"taskId":"\([^"]*\)".*/\1/p')
+
+# GetTask + ListTasks
+curl -s http://localhost:8081/a2a/rpc \
+  -H 'Content-Type: application/json' \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"GetTask\",\"params\":{\"taskId\":\"$TASK_ID\"},\"id\":\"2\"}"
+
+curl -s http://localhost:8081/a2a/rpc \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"ListTasks","params":{"limit":10},"id":"3"}'
+
+# Subscribe + SSE
+curl -s http://localhost:8081/a2a/rpc \
+  -H 'Content-Type: application/json' \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"SubscribeToTask\",\"params\":{\"taskId\":\"$TASK_ID\",\"afterSequence\":0,\"limit\":20},\"id\":\"4\"}"
+
+curl -N "http://localhost:8081/a2a/sse/$TASK_ID?afterSequence=0&limit=100"
+
+# Cancel task
+curl -s http://localhost:8081/a2a/rpc \
+  -H 'Content-Type: application/json' \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"CancelTask\",\"params\":{\"taskId\":\"$TASK_ID\",\"reason\":\"manual stop\"},\"id\":\"5\"}"
+
+# Agent card endpoints
+curl -s http://localhost:8081/.well-known/agent-card.json
+curl -s http://localhost:8081/a2a/rpc \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"GetExtendedAgentCard","params":{"includeSignature":true},"id":"6"}'
 ```
 
-## Configuration
+## Camel Component URI Options
 
-### URI Format
+The reusable Camel endpoint URI format:
 
-```
+```text
 a2a:agent[?options]
 ```
 
-### URI Parameters
-
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `agent` | String | - | **Required.** Target agent identifier |
-| `remoteUrl` | String | `ws://localhost:8081/a2a` | Remote A2A server URL |
-| `serverUrl` | String | `ws://0.0.0.0:8081/a2a` | Local server URL for consumers |
-| `protocolVersion` | String | `a2a/2025-06-18` | Protocol version identifier |
-| `sendToAll` | Boolean | `false` | Send to all connected agents |
-| `authToken` | String | - | Authentication token |
-| `retryCount` | Integer | `3` | Number of retry attempts |
-| `retryDelayMs` | Long | `500` | Delay between retries (ms) |
+|---|---|---|---|
+| `agent` | String | - | Endpoint agent identifier |
+| `remoteUrl` | String | `ws://localhost:8081/a2a` | Remote target URL |
+| `serverUrl` | String | `ws://0.0.0.0:8081/a2a` | Local consumer bind URL |
+| `protocolVersion` | String | `a2a/2025-06-18` | Protocol version marker |
+| `sendToAll` | Boolean | `false` | Broadcast behavior |
+| `authToken` | String | - | Optional token |
+| `retryCount` | Integer | `3` | Send retry count |
+| `retryDelayMs` | Long | `500` | Retry backoff ms |
 
-### Example URIs
+## Build and Test
 
-```java
-// Basic producer
-from("direct:input").to("a2a:myAgent");
-
-// Consumer with custom server
-from("a2a:myAgent?serverUrl=ws://0.0.0.0:9090/a2a")
-    .process(new MyProcessor());
-
-// Producer with authentication
-from("direct:secure").to("a2a:secureAgent?authToken=abc123&retryCount=5");
-```
-
-## Usage
-
-### Basic Producer
-
-```java
-from("direct:sendMessage")
-    .to("a2a:myAgent")
-    .log("Sent message: ${body}");
-```
-
-### Consumer with Processing
-
-```java
-from("a2a:myAgent")
-    .process(exchange -> {
-        // Process incoming A2A message
-        String body = exchange.getIn().getBody(String.class);
-        // ... business logic ...
-        exchange.getMessage().setBody("Processed: " + body);
-    });
-```
-
-### Tool Registration
-
-```java
-@BindToRegistry("a2aToolRegistry")
-public class MyToolRegistry {
-    private final A2AToolRegistry registry = new A2AToolRegistry();
-
-    @PostConstruct
-    public void init() {
-        registry.register("echo", "direct:echo", "Echo service");
-        registry.register("calculator", "direct:calc", "Calculator service");
-    }
-}
-```
-
-## API Reference
-
-### A2AMessage
-
-JSON-RPC 2.0 message container.
-
-```java
-// Create a request
-A2AMessage request = A2AMessage.request("methodName", parameters);
-
-// Access fields
-String id = request.getId();
-String method = request.getMethod();
-Object params = request.getParams();
-```
-
-### A2AJsonCodec
-
-JSON serialization/deserialization utility.
-
-```java
-A2AJsonCodec codec = new A2AJsonCodec();
-
-// Serialize
-String json = codec.serialize(myObject);
-
-// Deserialize
-MyClass obj = codec.deserialize(json, MyClass.class);
-```
-
-### JsonRpcError
-
-Error response generation.
-
-```java
-// Create error response
-String errorJson = JsonRpcError.envelope("requestId", 123, "Error message");
-```
-
-### A2AToolRegistry
-
-Tool registration and discovery.
-
-```java
-A2AToolRegistry registry = new A2AToolRegistry();
-
-// Register tool
-registry.register("toolName", "direct:route", "Tool description");
-
-// List tools
-List<Map<String, Object>> tools = registry.list();
-```
-
-## Examples
-
-### Complete Route Configuration
-
-```yaml
-# routes/a2a-platform.yaml
-- route:
-    id: health-check
-    from: "undertow:http://0.0.0.0:8080/health?httpMethodRestrict=GET"
-    steps:
-      - setBody:
-          constant: '{"status":"UP"}'
-
-- route:
-    id: a2a-handler
-    from: "a2a://agent?serverUrl=ws://0.0.0.0:8081/a2a"
-    steps:
-      - log: "Received A2A message: ${body}"
-      - process:
-          ref: intentRouter
-      - to: "a2a://agent"
-
-- route:
-    id: echo-tool
-    from: "direct:echo"
-    steps:
-      - log: "Echo request: ${body}"
-      - setBody:
-          simple: '{"result": "${body}", "timestamp": "${date:now}"}'
-```
-
-### Java Route Builder
-
-```java
-public class A2ARoutes extends RouteBuilder {
-    @Override
-    public void configure() {
-        // Health endpoint
-        from("undertow:http://0.0.0.0:8080/health")
-            .setBody(constant("{\"status\":\"UP\"}"));
-
-        // A2A consumer
-        from("a2a://myAgent")
-            .process(new IntentRouterProcessor())
-            .to("a2a://myAgent");
-
-        // Tool routes
-        from("direct:calculator")
-            .process(exchange -> {
-                // Calculator logic
-                String expression = exchange.getIn().getBody(String.class);
-                double result = evaluate(expression);
-                exchange.getMessage().setBody("{\"result\": " + result + "}");
-            });
-    }
-}
-```
-
-### Spring Boot Integration
-
-```java
-@SpringBootApplication
-public class A2AApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(A2AApplication.class, args);
-    }
-
-    @Bean
-    public RouteBuilder a2aRoutes() {
-        return new RouteBuilder() {
-            @Override
-            public void configure() {
-                from("a2a://springAgent")
-                    .log("Spring A2A: ${body}")
-                    .to("mock:result");
-            }
-        };
-    }
-}
-```
-
-## Building
-
-### Prerequisites
-
-- Java 21 JDK
-- Maven 3.6+
-
-### Build Commands
+From root:
 
 ```bash
-# Build all modules (component + samples)
-mvn clean compile
+# Full build + test
+mvn clean test
 
-# Build only the component
-mvn clean compile -pl camel-a2a-component
+# Component only
+mvn -pl camel-a2a-component test
 
-# Build only samples
-mvn clean compile -pl samples
+# Sample module only
+mvn -pl samples/a2a-yaml-service test
+```
 
-# Run tests for all modules
-mvn test
+Package artifacts:
 
-# Create JAR with dependencies for component
+```bash
+mvn package
 mvn package -pl camel-a2a-component
-
-# Create JAR for samples
-mvn package -pl samples
-
-# Install all to local repository
-mvn install
-
-# Generate documentation
-mvn javadoc:javadoc -pl camel-a2a-component
+mvn package -pl samples/a2a-yaml-service
 ```
 
-### Running Samples
+## Documentation
 
-After building, you can run the sample application:
-
-```bash
-# Run samples (requires component to be installed first)
-cd samples/a2a-yaml-service
-mvn exec:java
-
-# Or run directly with full classpath
-mvn exec:java -pl samples/a2a-yaml-service
-```
-
-The sample application starts:
-- Health check endpoint: http://localhost:8080/health
-- A2A WebSocket server: ws://localhost:8081/a2a
-- Example tool route: direct:echo
-
-### Docker Build
-
-```dockerfile
-FROM openjdk:21-jdk-slim
-COPY camel-a2a-component/target/camel-a2a.jar app.jar
-EXPOSE 8080 8081
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Setup
-
-```bash
-# Clone and setup
-git clone <repository-url>
-cd camel-a2a
-
-# Build all modules
-mvn clean compile
-
-# Run tests for all modules
-mvn test
-
-# Run the sample application
-cd samples/a2a-yaml-service
-mvn exec:java
-
-# Run with debugging (from sample module directory)
-mvn exec:java -Ddebug
-```
-
-### Code Style
-
-- Follow Java 21 best practices
-- Use meaningful variable and method names
-- Add JavaDoc comments for public APIs
-- Maintain test coverage above 80%
+- Detailed architecture: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/architecture.md`
+- Developer guide: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/development.md`
+- Test plan: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/TEST_PLAN.md`
+- Publish guide: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/PUBLISH_GUIDE.md`
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-For questions and support:
-- Create an issue on GitHub
-- Check the [Apache Camel documentation](https://camel.apache.org/)
-- Review JSON-RPC 2.0 [specification](https://www.jsonrpc.org/specification)
-
----
-
-**Generated on:** October 17, 2025
-**Version:** 0.5.0-SNAPSHOT
-**Camel Version:** 4.15.0
+Apache License 2.0. See `LICENSE`.

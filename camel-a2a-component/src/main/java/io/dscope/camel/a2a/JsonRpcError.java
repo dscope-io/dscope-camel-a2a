@@ -20,16 +20,31 @@ public final class JsonRpcError {
      * @return JSON string representing the error response
      */
     public static String envelope(String id, int code, String message) {
+        return envelope((Object) id, code, message, false);
+    }
+
+    /**
+     * Creates a JSON-RPC 2.0 error response envelope with flexible id handling.
+     *
+     * @param id the request id (can be null)
+     * @param code the error code
+     * @param message the error message
+     * @param includeNullId true to include "id": null when id is unavailable
+     * @return JSON string representing the error response
+     */
+    public static String envelope(Object id, int code, String message, boolean includeNullId) {
         try {
             var root = new LinkedHashMap<String, Object>();
             root.put("jsonrpc", "2.0");
             root.put("error", Map.of("code", code, "message", message));
-            if (id != null) {
+            if (includeNullId || id != null) {
                 root.put("id", id);
             }
             return new ObjectMapper().writeValueAsString(root);
         } catch (Exception e) {
-            // Fallback to manual JSON construction if serialization fails
+            if (includeNullId) {
+                return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":" + code + ",\"message\":\"" + message + "\"},\"id\":null}";
+            }
             return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":" + code + ",\"message\":\"" + message + "\"}}";
         }
     }

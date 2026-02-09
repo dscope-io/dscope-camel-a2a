@@ -1,5 +1,6 @@
 package io.dscope.camel.a2a.samples.basic;
 
+import io.dscope.camel.a2a.A2AComponentApplicationSupport;
 import org.apache.camel.main.Main;
 
 /**
@@ -16,8 +17,8 @@ public class Runner {
      * @throws Exception if startup fails
      */
     public static void main(String[] args) throws Exception {
-        Main main = new Main();
-        main.configure().withRoutesIncludePattern("basic/routes/*.yaml");
+        A2AComponentApplicationSupport support = new A2AComponentApplicationSupport();
+        Main main = support.createMain("basic/routes/*.yaml");
         main.run();
     }
 }

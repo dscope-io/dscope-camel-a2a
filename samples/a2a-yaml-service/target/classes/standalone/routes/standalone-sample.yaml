@@ -1,6 +1,3 @@
-# Standalone A2A sample routes
-# This sample demonstrates a minimal A2A setup with custom configuration
-
 # Health check route
 - from:
     uri: "undertow:http://0.0.0.0:8080/health?httpMethodRestrict=GET"
@@ -8,20 +5,55 @@
       - setBody:
           constant: '{"status":"UP","sample":"standalone"}'
 
-# A2A WebSocket route with custom configuration
+# Diagnostics route
 - from:
-    uri: "a2a://standalone?serverUrl=ws://0.0.0.0:8082/a2a&protocolVersion=a2a/2025-01-01"
+    uri: "undertow:http://0.0.0.0:8080/diagnostics?httpMethodRestrict=GET"
     steps:
-      - log:
-          message: "Standalone A2A: Received message: ${body}"
-      - setBody:
-          simple: '{"response":"received","sample":"standalone","timestamp":"${date:now:yyyy-MM-dd HH:mm:ss}"}'
+      - doTry:
+          steps:
+            - to: "bean:a2aDiagnosticsProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"
 
-# Direct route for testing
+# A2A JSON-RPC route (core methods)
 - from:
-    uri: "direct:standalone-test"
+    uri: "undertow:http://0.0.0.0:8081/a2a/rpc?httpMethodRestrict=POST"
     steps:
-      - log:
-          message: "Standalone test route: ${body}"
-      - setBody:
-          simple: '{"result":"standalone-test","input":"${body}"}'
+      - doTry:
+          steps:
+            - to: "bean:a2aJsonRpcEnvelopeProcessor"
+            - to: "bean:a2aMethodDispatchProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"
+
+# A2A SSE route for task updates
+- from:
+    uri: "undertow:http://0.0.0.0:8081/a2a/sse/{taskId}?httpMethodRestrict=GET"
+    steps:
+      - doTry:
+          steps:
+            - to: "bean:a2aTaskSseProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"
+
+# Agent Card discovery route
+- from:
+    uri: "undertow:http://0.0.0.0:8081/.well-known/agent-card.json?httpMethodRestrict=GET"
+    steps:
+      - doTry:
+          steps:
+            - to: "bean:a2aAgentCardDiscoveryProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"

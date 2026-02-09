@@ -5,18 +5,55 @@
       - setBody:
           constant: '{"status":"UP"}'
 
-# A2A WS route
+# Diagnostics route
 - from:
-    uri: "a2a://self?serverUrl=ws://0.0.0.0:8081/a2a"
+    uri: "undertow:http://0.0.0.0:8080/diagnostics?httpMethodRestrict=GET"
     steps:
-      - log:
-          message: "Received WS message: ${body}"
+      - doTry:
+          steps:
+            - to: "bean:a2aDiagnosticsProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"
 
-# Example tool route
+# A2A JSON-RPC route (core methods)
 - from:
-    uri: "direct:echo"
+    uri: "undertow:http://0.0.0.0:8081/a2a/rpc?httpMethodRestrict=POST"
     steps:
-      - log:
-          message: "Echo: ${body}"
-      - setBody:
-          simple: '{"echo": "${body}"}'
+      - doTry:
+          steps:
+            - to: "bean:a2aJsonRpcEnvelopeProcessor"
+            - to: "bean:a2aMethodDispatchProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"
+
+# A2A SSE route for task updates
+- from:
+    uri: "undertow:http://0.0.0.0:8081/a2a/sse/{taskId}?httpMethodRestrict=GET"
+    steps:
+      - doTry:
+          steps:
+            - to: "bean:a2aTaskSseProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"
+
+# Agent Card discovery route
+- from:
+    uri: "undertow:http://0.0.0.0:8081/.well-known/agent-card.json?httpMethodRestrict=GET"
+    steps:
+      - doTry:
+          steps:
+            - to: "bean:a2aAgentCardDiscoveryProcessor"
+          doCatch:
+            - exception:
+                - "java.lang.Exception"
+              steps:
+                - to: "bean:a2aErrorProcessor"

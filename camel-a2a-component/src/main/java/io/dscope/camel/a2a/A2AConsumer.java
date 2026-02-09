@@ -1,8 +1,8 @@
 package io.dscope.camel.a2a;
 
 import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.DefaultConsumer;
+import io.dscope.camel.a2a.service.A2AConsumerRouteService;
 
 /**
  * Consumer for receiving messages from A2A WebSocket endpoints.
@@ -12,6 +12,7 @@ public class A2AConsumer extends DefaultConsumer {
 
     /** The endpoint this consumer belongs to */
     private final A2AEndpoint ep;
+    private final A2AConsumerRouteService routeService;
 
     /**
      * Creates a new A2A consumer.
@@ -22,6 +23,7 @@ public class A2AConsumer extends DefaultConsumer {
     public A2AConsumer(A2AEndpoint ep, Processor p) {
         super(ep, p);
         this.ep = ep;
+        this.routeService = new A2AConsumerRouteService();
     }
 
     /**
@@ -34,15 +36,6 @@ public class A2AConsumer extends DefaultConsumer {
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        String wsUri = ep.getConfiguration().getServerUrl();
-
-        ep.getCamelContext().addRoutes(new RouteBuilder() {
-            @Override
-            public void configure() {
-                from(wsUri)
-                    .process(getProcessor())
-                    .to(wsUri);
-            }
-        });
+        routeService.registerRoute(ep, getProcessor());
     }
 }
