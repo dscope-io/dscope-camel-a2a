@@ -69,4 +69,20 @@ class A2AJsonRpcEnvelopeProcessorTest {
         var error = assertThrows(A2AMethodNotFoundException.class, () -> processor.process(exchange));
         assertEquals("Method not found: GetTask", error.getMessage());
     }
+
+    @Test
+    void processAcceptsBinaryJsonPayload() throws Exception {
+        var context = new DefaultCamelContext();
+        var exchange = new DefaultExchange(context);
+        exchange.getIn().setBody("""
+            {"jsonrpc":"2.0","method":"intent/execute","params":{"foo":"bar"},"id":"99"}
+            """.getBytes());
+
+        var processor = new A2AJsonRpcEnvelopeProcessor(Set.of("intent/execute"));
+        processor.process(exchange);
+
+        assertEquals("request", exchange.getProperty(A2AExchangeProperties.ENVELOPE_TYPE));
+        assertEquals("99", exchange.getProperty(A2AExchangeProperties.REQUEST_ID));
+        assertEquals("intent/execute", exchange.getProperty(A2AExchangeProperties.METHOD));
+    }
 }

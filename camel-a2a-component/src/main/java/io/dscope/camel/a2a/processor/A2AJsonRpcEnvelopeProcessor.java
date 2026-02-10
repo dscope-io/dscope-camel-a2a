@@ -1,7 +1,11 @@
 package io.dscope.camel.a2a.processor;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.io.InputStream;
+import java.io.Reader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.Exchange;
@@ -29,7 +33,7 @@ public class A2AJsonRpcEnvelopeProcessor implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
         Object body = exchange.getIn().getBody();
-        JsonNode root = parseEnvelope(body);
+        JsonNode root = parseEnvelope(exchange, body);
         String rawPayload = rawPayload(body, root);
         Object requestId = resolveId(root.get("id"));
 
@@ -47,7 +51,7 @@ public class A2AJsonRpcEnvelopeProcessor implements Processor {
         exchange.getMessage().setBody(root);
     }
 
-    private JsonNode parseEnvelope(Object body) {
+    private JsonNode parseEnvelope(Exchange exchange, Object body) {
         try {
             if (body == null) {
                 throw new A2AJsonRpcValidationException("Invalid JSON-RPC envelope: body must not be null");
@@ -55,8 +59,25 @@ public class A2AJsonRpcEnvelopeProcessor implements Processor {
             if (body instanceof JsonNode jsonNode) {
                 return jsonNode;
             }
-            if (body instanceof String jsonString) {
-                return mapper.readTree(jsonString);
+            if (body instanceof CharSequence jsonString) {
+                return mapper.readTree(jsonString.toString());
+            }
+            if (body instanceof byte[] bytes) {
+                return mapper.readTree(bytes);
+            }
+            if (body instanceof InputStream inputStream) {
+                return mapper.readTree(inputStream);
+            }
+            if (body instanceof Reader reader) {
+                return mapper.readTree(reader);
+            }
+            if (body instanceof Map<?, ?> || body instanceof List<?>) {
+                return mapper.valueToTree(body);
+            }
+
+            String coerced = exchange.getIn().getBody(String.class);
+            if (coerced != null && !coerced.isBlank()) {
+                return mapper.readTree(coerced);
             }
             return mapper.valueToTree(body);
         } catch (A2AJsonRpcValidationException e) {

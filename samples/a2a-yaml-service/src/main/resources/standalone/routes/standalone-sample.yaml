@@ -24,6 +24,8 @@
     steps:
       - doTry:
           steps:
+            - convertBodyTo:
+                type: "java.lang.String"
             - to: "bean:a2aJsonRpcEnvelopeProcessor"
             - to: "bean:a2aMethodDispatchProcessor"
           doCatch:
