@@ -6,6 +6,7 @@ io/dscope/camel/a2a/model/TaskState.class
 io/dscope/camel/a2a/processor/A2AJsonRpcEnvelopeProcessor.class
 io/dscope/camel/a2a/model/dto/GetPushNotificationConfigResponse.class
 io/dscope/camel/a2a/model/dto/ListTasksResponse.class
+io/dscope/camel/a2a/service/PersistentA2ATaskEventService.class
 io/dscope/camel/a2a/processor/SendMessageProcessor.class
 io/dscope/camel/a2a/model/Part.class
 io/dscope/camel/a2a/processor/A2AMethodNotFoundException.class
@@ -34,6 +35,7 @@ io/dscope/camel/a2a/model/dto/ListTasksRequest.class
 io/dscope/camel/a2a/A2AConfiguration.class
 io/dscope/camel/a2a/processor/A2AIllegalTaskStateException.class
 io/dscope/camel/a2a/A2AComponentApplicationSupport.class
+io/dscope/camel/a2a/service/PersistentA2ATaskService$1.class
 io/dscope/camel/a2a/service/A2AConsumerRouteService.class
 io/dscope/camel/a2a/processor/CreatePushNotificationConfigProcessor.class
 io/dscope/camel/a2a/model/Task.class
@@ -43,6 +45,7 @@ io/dscope/camel/a2a/model/TaskSubscription.class
 io/dscope/camel/a2a/service/NoopTaskEventPublisher.class
 io/dscope/camel/a2a/IntentRouterProcessor.class
 io/dscope/camel/a2a/service/A2APushNotificationConfigService.class
+io/dscope/camel/a2a/service/PersistentA2ATaskService$2.class
 io/dscope/camel/a2a/model/dto/GetTaskRequest.class
 io/dscope/camel/a2a/service/A2AJsonCodec.class
 io/dscope/camel/a2a/service/A2ATaskService.class
@@ -75,10 +78,13 @@ io/dscope/camel/a2a/model/PushDeliveryStats.class
 io/dscope/camel/a2a/model/dto/SendStreamingMessageResponse.class
 io/dscope/camel/a2a/model/dto/SendMessageRequest.class
 io/dscope/camel/a2a/model/A2AMessage.class
+io/dscope/camel/a2a/service/PersistentA2ATaskService$3.class
 io/dscope/camel/a2a/model/dto/GetExtendedAgentCardRequest.class
 io/dscope/camel/a2a/model/dto/DeletePushNotificationConfigResponse.class
 io/dscope/camel/a2a/service/PushNotificationNotifier.class
 io/dscope/camel/a2a/processor/AgentCardDiscoveryProcessor.class
+io/dscope/camel/a2a/service/PersistentA2ATaskService.class
+io/dscope/camel/a2a/persistence/package-info.class
 io/dscope/camel/a2a/A2AEndpoint.class
 io/dscope/camel/a2a/model/AgentCard.class
 io/dscope/camel/a2a/A2AToolRegistry.class

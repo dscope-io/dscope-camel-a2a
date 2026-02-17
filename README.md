@@ -10,6 +10,7 @@ This repository provides:
 
 - A reusable Camel component (`a2a:`) for producer/consumer integration.
 - A protocol service runtime with JSON-RPC 2.0, task lifecycle methods, SSE streaming, push notification config APIs, and agent card discovery.
+- Optional persistence-backed task/event services via shared `camel-persistence` backends.
 - A sample YAML-based service that exposes a practical HTTP surface for local testing and integration.
 
 ## Table of Contents
@@ -125,6 +126,22 @@ mvn exec:java
 mvn exec:java -Dexec.args="standalone"
 ```
 
+### Persistence Quickstart
+
+JDBC mode (embedded Derby):
+
+```bash
+cd samples/a2a-yaml-service
+mvn exec:java -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true
+```
+
+Redis mode:
+
+```bash
+cd samples/a2a-yaml-service
+mvn exec:java -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=redis -Dcamel.persistence.redis.uri=redis://localhost:6379
+```
+
 ## Runtime Endpoints
 
 Both sample modes expose the same protocol surface:
@@ -214,6 +231,9 @@ mvn -pl camel-a2a-component test
 
 # Sample module only
 mvn -pl samples/a2a-yaml-service test
+
+# Persistence-backed component tests
+mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true
 ```
 
 Package artifacts:
@@ -223,6 +243,31 @@ mvn package
 mvn package -pl camel-a2a-component
 mvn package -pl samples/a2a-yaml-service
 ```
+
+## Persistence Configuration
+
+Persistence is disabled by default. Enable it with:
+
+```bash
+-Dcamel.persistence.enabled=true
+-Dcamel.persistence.backend=redis|jdbc|ic4j
+```
+
+Common persistence properties:
+
+- `camel.persistence.snapshot-every-events` (default `25`)
+- `camel.persistence.max-replay-events` (default `500`)
+
+Redis backend properties:
+
+- `camel.persistence.redis.uri` (default `redis://localhost:6379`)
+- `camel.persistence.redis.key-prefix` (default `camel:state`)
+
+JDBC backend properties:
+
+- `camel.persistence.jdbc.url` (example: `jdbc:derby:memory:a2a;create=true`)
+- `camel.persistence.jdbc.user`
+- `camel.persistence.jdbc.password`
 
 ## Documentation
 

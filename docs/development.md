@@ -120,9 +120,34 @@ mvn test
 3. Add or update tests in `InMemoryPushNotificationConfigServiceTest`.
 4. Confirm diagnostics counters still match behavior.
 
-## 8. Testing Layers
+## 8. Persistence Runtime Configuration
 
-### 8.1 Unit + Contract Tests
+Enable persistence mode:
+
+```bash
+-Dcamel.persistence.enabled=true
+-Dcamel.persistence.backend=redis|jdbc|ic4j
+```
+
+Redis backend example:
+
+```bash
+-Dcamel.persistence.enabled=true
+-Dcamel.persistence.backend=redis
+-Dcamel.persistence.redis.uri=redis://localhost:6379
+```
+
+JDBC backend example (embedded Derby):
+
+```bash
+-Dcamel.persistence.enabled=true
+-Dcamel.persistence.backend=jdbc
+-Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true
+```
+
+## 9. Testing Layers
+
+### 9.1 Unit + Contract Tests
 
 Most behavior is validated by tests in:
 
@@ -138,11 +163,11 @@ Coverage includes:
 - SSE stream generation
 - push config CRUD and retry stats
 
-### 8.2 Manual Runtime Checks
+### 9.2 Manual Runtime Checks
 
 Use the curl sequence in `/Users/roman/Projects/DScope/CamelA2AComponent/README.md` for end-to-end sanity.
 
-## 9. Error Handling Expectations
+## 10. Error Handling Expectations
 
 `A2AErrorProcessor` maps exceptions to JSON-RPC codes:
 
@@ -153,7 +178,7 @@ Use the curl sequence in `/Users/roman/Projects/DScope/CamelA2AComponent/README.
 
 When adding new exceptions, ensure they map appropriately and include actionable messages.
 
-## 10. Coding Conventions
+## 11. Coding Conventions
 
 - Keep processors small and method-focused.
 - Validate params early and throw `A2AInvalidParamsException` for contract violations.
@@ -161,14 +186,14 @@ When adding new exceptions, ensure they map appropriately and include actionable
 - Prefer immutable copies at service boundaries where practical.
 - Preserve backward-compatible wrappers in `io.dscope.camel.a2a` when moving classes.
 
-## 11. Debugging Tips
+## 12. Debugging Tips
 
 - If RPC requests fail, inspect envelope parsing first (`A2AJsonRpcEnvelopeProcessor`).
 - If methods are rejected, confirm inclusion in `A2AProtocolMethods.CORE_METHODS` and method map binding.
 - If SSE seems empty, verify task event publication and `afterSequence` values.
 - If push notifications are not firing, verify config enabled state, task filter, and notifier attempts.
 
-## 12. Release-Oriented Checks
+## 13. Release-Oriented Checks
 
 Before release work, run:
 
@@ -180,7 +205,7 @@ mvn -pl samples/a2a-yaml-service test
 
 Then follow `/Users/roman/Projects/DScope/CamelA2AComponent/docs/PUBLISH_GUIDE.md`.
 
-## 13. Related Docs
+## 14. Related Docs
 
 - Architecture: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/architecture.md`
 - Test plan: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/TEST_PLAN.md`

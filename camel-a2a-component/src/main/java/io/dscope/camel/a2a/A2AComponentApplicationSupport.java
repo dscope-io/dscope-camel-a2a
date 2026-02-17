@@ -1,6 +1,7 @@
 package io.dscope.camel.a2a;
 
 import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.function.Consumer;
 import java.util.Map;
@@ -38,7 +39,12 @@ import io.dscope.camel.a2a.service.A2ATaskService;
 import io.dscope.camel.a2a.service.InMemoryA2ATaskService;
 import io.dscope.camel.a2a.service.InMemoryPushNotificationConfigService;
 import io.dscope.camel.a2a.service.InMemoryTaskEventService;
+import io.dscope.camel.a2a.service.PersistentA2ATaskEventService;
+import io.dscope.camel.a2a.service.PersistentA2ATaskService;
 import io.dscope.camel.a2a.service.WebhookPushNotificationNotifier;
+import io.dscope.camel.persistence.core.FlowStateStore;
+import io.dscope.camel.persistence.core.FlowStateStoreFactory;
+import io.dscope.camel.persistence.core.PersistenceConfiguration;
 import org.apache.camel.main.Main;
 import org.apache.camel.Processor;
 
@@ -82,23 +88,10 @@ public class A2AComponentApplicationSupport {
         void bind(String name, Object bean);
     }
 
-    /**
-     * Creates and configures a Camel {@link Main} instance.
-     *
-     * @param routeIncludePattern route include pattern (e.g. "basic/routes/*.yaml")
-     * @return configured main runtime
-     */
     public Main createMain(String routeIncludePattern) {
         return createMain(routeIncludePattern, null);
     }
 
-    /**
-     * Creates and configures a Camel {@link Main} instance and applies an extension hook.
-     *
-     * @param routeIncludePattern route include pattern (e.g. "basic/routes/*.yaml")
-     * @param customizer optional customizer for sample-specific wiring
-     * @return configured main runtime
-     */
     public Main createMain(String routeIncludePattern, Consumer<Main> customizer) {
         validateRouteIncludePattern(routeIncludePattern);
 
@@ -111,13 +104,22 @@ public class A2AComponentApplicationSupport {
         return main;
     }
 
-    /**
-     * Binds default A2A protocol beans.
-     */
     public void bindDefaultBeans(BeanBinder binder) {
         Objects.requireNonNull(binder, "binder must not be null");
-        InMemoryTaskEventService taskEventService = new InMemoryTaskEventService();
-        A2ATaskService taskService = new InMemoryA2ATaskService(taskEventService);
+
+        PersistenceConfiguration persistenceConfig = PersistenceConfiguration.fromProperties(systemProperties());
+
+        InMemoryTaskEventService taskEventService;
+        A2ATaskService taskService;
+        if (persistenceConfig.enabled()) {
+            FlowStateStore stateStore = FlowStateStoreFactory.create(persistenceConfig);
+            taskEventService = new PersistentA2ATaskEventService(stateStore);
+            taskService = new PersistentA2ATaskService(stateStore, taskEventService, persistenceConfig.rehydrationPolicy());
+        } else {
+            taskEventService = new InMemoryTaskEventService();
+            taskService = new InMemoryA2ATaskService(taskEventService);
+        }
+
         A2APushNotificationConfigService pushConfigService =
             new InMemoryPushNotificationConfigService(new WebhookPushNotificationNotifier());
         taskEventService.addListener(pushConfigService::onTaskEvent);
@@ -201,9 +203,6 @@ public class A2AComponentApplicationSupport {
         binder.bind(BEAN_TOOL_REGISTRY, new A2AToolRegistry());
     }
 
-    /**
-     * Validates that the include pattern is non-empty and targets YAML routes.
-     */
     public void validateRouteIncludePattern(String routeIncludePattern) {
         if (routeIncludePattern == null || routeIncludePattern.isBlank()) {
             throw new IllegalArgumentException("Route include pattern must not be blank");
@@ -211,5 +210,11 @@ public class A2AComponentApplicationSupport {
         if (!YAML_ROUTE_PATTERN.matcher(routeIncludePattern).matches()) {
             throw new IllegalArgumentException("Route include pattern must target .yaml or .yml resources");
         }
+    }
+
+    private Properties systemProperties() {
+        Properties properties = new Properties();
+        properties.putAll(System.getProperties());
+        return properties;
     }
 }

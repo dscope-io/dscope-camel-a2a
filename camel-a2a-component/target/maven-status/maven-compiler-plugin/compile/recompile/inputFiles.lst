@@ -13,6 +13,7 @@
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/service/WebhookPushNotificationNotifier.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/A2AJsonCodec.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/service/PushNotificationNotifier.java
+/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/service/PersistentA2ATaskEventService.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/processor/A2AErrorProcessor.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/model/dto/GetExtendedAgentCardRequest.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/model/PushDeliveryStats.java
@@ -48,6 +49,7 @@
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/service/A2APushNotificationConfigService.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/processor/A2AJsonRpcValidationException.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/processor/IntentRouterProcessor.java
+/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/service/PersistentA2ATaskService.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/catalog/AgentCardCatalog.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/processor/ListTasksProcessor.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/A2AConfiguration.java
@@ -79,6 +81,7 @@
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/model/dto/CancelTaskRequest.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/service/A2AJsonCodec.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/catalog/AllowAllAgentCardPolicyChecker.java
+/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/persistence/package-info.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/A2AProducer.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/catalog/NoopAgentCardSigner.java
 /Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/src/main/java/io/dscope/camel/a2a/model/dto/ListTasksResponse.java

@@ -25,6 +25,12 @@ Run per module:
 ```bash
 mvn -pl camel-a2a-component test
 mvn -pl samples/a2a-yaml-service test
+
+# Component tests with JDBC persistence mode
+mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true
+
+# Component tests with Redis persistence mode (requires reachable Redis)
+mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=redis -Dcamel.persistence.redis.uri=redis://localhost:6379
 ```
 
 Expected result:
@@ -103,6 +109,24 @@ Expected:
 
 - Discovery endpoint returns an agent card document
 - Extended method returns `agentCard` and optional signature payload
+
+### 6. Persistence Sanity (JDBC/Redis)
+
+1. Start sample runtime with persistence enabled:
+   - JDBC:
+     `-Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true`
+   - Redis:
+     `-Dcamel.persistence.enabled=true -Dcamel.persistence.backend=redis -Dcamel.persistence.redis.uri=redis://localhost:6379`
+2. Create task via `SendMessage`.
+3. Transition state (for example `SendStreamingMessage` or `CancelTask`).
+4. Restart runtime process with the same persistence settings.
+5. Call `GetTask` and `GET /a2a/sse/{taskId}`.
+
+Expected:
+
+- task state is restored after restart
+- task event stream remains available and ordered
+- protocol envelopes remain unchanged (`jsonrpc=2.0`)
 
 ## Exit Criteria
 

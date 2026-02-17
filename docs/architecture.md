@@ -42,8 +42,8 @@ It binds:
   - `DeletePushNotificationConfigProcessor`
   - `GetExtendedAgentCardProcessor`
 - Services:
-  - `InMemoryA2ATaskService`
-  - `InMemoryTaskEventService`
+  - `InMemoryA2ATaskService` or `PersistentA2ATaskService`
+  - `InMemoryTaskEventService` or `PersistentA2ATaskEventService`
   - `InMemoryPushNotificationConfigService`
 - Discovery/catalog:
   - `DefaultAgentCardCatalog`
@@ -220,12 +220,14 @@ Compatibility shims are present in `io.dscope.camel.a2a` for classes that moved 
 
 Current implementation constraints:
 
-- In-memory storage only (tasks, subscriptions, push configs).
+- Push configuration storage remains in-memory.
 - No persistence/recovery across process restarts.
 - No distributed coordination.
 - No built-in authentication middleware on sample endpoints.
 
 These constraints are acceptable for local development and protocol hardening but should be replaced for production deployment.
+
+When `camel.persistence.enabled=true`, task and task-event state can be backed by `camel-persistence` `FlowStateStore` backends (for example Redis/JDBC), enabling dehydration/rehydration across process restarts.
 
 ## 14. Extension Points
 
