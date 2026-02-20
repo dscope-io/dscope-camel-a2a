@@ -1,6 +1,7 @@
 package io.dscope.camel.a2a.samples.standalone;
 
 import io.dscope.camel.a2a.A2AComponentApplicationSupport;
+import io.dscope.camel.a2a.samples.SamplePersistenceDefaults;
 import org.apache.camel.main.Main;
 
 /**
@@ -19,8 +20,9 @@ public class Runner {
     public static void main(String[] args) throws Exception {
         System.out.println("Starting A2A Camel Component - Standalone Sample...");
 
+        SamplePersistenceDefaults.configureRedisPersistence();
         A2AComponentApplicationSupport support = new A2AComponentApplicationSupport();
-        Main main = support.createMain("standalone/routes/*.yaml");
+        Main main = support.createMain("standalone/routes/*.camel.yaml");
         main.run();
     }
 }

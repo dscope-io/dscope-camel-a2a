@@ -42,8 +42,8 @@ camel-a2a/
 |  `- a2a-yaml-service/                     # Runnable sample runtime
 |     |- src/main/java/io/dscope/camel/a2a/samples/
 |     `- src/main/resources/
-|        |- basic/routes/a2a-platform.yaml
-|        `- standalone/routes/standalone-sample.yaml
+|        |- basic/routes/a2a-platform.camel.yaml
+|        `- standalone/routes/standalone-sample.camel.yaml
 `- docs/
    |- architecture.md
    |- development.md
@@ -119,12 +119,22 @@ mvn clean test
 ```bash
 cd samples/a2a-yaml-service
 
-# Default sample
+# Default sample (Redis persistence defaults enabled)
 mvn exec:java
 
 # Standalone sample
 mvn exec:java -Dexec.args="standalone"
+
+# Override sample service port
+A2A_SAMPLE_PORT=8090 mvn exec:java
 ```
+
+By default, sample runners set:
+
+- `camel.persistence.enabled=true`
+- `camel.persistence.backend=redis`
+- `camel.persistence.redis.uri` from `REDIS_URI` env var when present, otherwise `redis://localhost:6379`
+- `a2a.sample.port` from `A2A_SAMPLE_PORT` env var when present, otherwise `8080`
 
 ### Persistence Quickstart
 
@@ -136,6 +146,14 @@ mvn exec:java -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc 
 ```
 
 Redis mode:
+
+Start a local Redis first (if you do not already have one running):
+
+```bash
+docker run --name a2a-redis -p 6379:6379 -d redis:7-alpine
+```
+
+Then run the sample with Redis persistence:
 
 ```bash
 cd samples/a2a-yaml-service
@@ -150,9 +168,9 @@ Both sample modes expose the same protocol surface:
 |---|---|---|
 | `GET` | `http://localhost:8080/health` | Health/liveness |
 | `GET` | `http://localhost:8080/diagnostics` | Runtime counters and supported methods |
-| `POST` | `http://localhost:8081/a2a/rpc` | JSON-RPC protocol entrypoint |
-| `GET` | `http://localhost:8081/a2a/sse/{taskId}` | Task event stream |
-| `GET` | `http://localhost:8081/.well-known/agent-card.json` | Agent card discovery |
+| `POST` | `http://localhost:8080/a2a/rpc` | JSON-RPC protocol entrypoint |
+| `GET` | `http://localhost:8080/a2a/sse/{taskId}` | Task event stream |
+| `GET` | `http://localhost:8080/.well-known/agent-card.json` | Agent card discovery |
 
 ## Manual Smoke Test
 
@@ -164,7 +182,7 @@ curl -s http://localhost:8080/health
 curl -s http://localhost:8080/diagnostics
 
 # SendMessage -> capture taskId
-SEND_RESPONSE=$(curl -s http://localhost:8081/a2a/rpc \
+SEND_RESPONSE=$(curl -s http://localhost:8080/a2a/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello"}]},"metadata":{"source":"curl"}},"id":"1"}')
 
@@ -172,29 +190,29 @@ echo "$SEND_RESPONSE"
 TASK_ID=$(echo "$SEND_RESPONSE" | sed -n 's/.*"taskId":"\([^"]*\)".*/\1/p')
 
 # GetTask + ListTasks
-curl -s http://localhost:8081/a2a/rpc \
+curl -s http://localhost:8080/a2a/rpc \
   -H 'Content-Type: application/json' \
   -d "{\"jsonrpc\":\"2.0\",\"method\":\"GetTask\",\"params\":{\"taskId\":\"$TASK_ID\"},\"id\":\"2\"}"
 
-curl -s http://localhost:8081/a2a/rpc \
+curl -s http://localhost:8080/a2a/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"ListTasks","params":{"limit":10},"id":"3"}'
 
 # Subscribe + SSE
-curl -s http://localhost:8081/a2a/rpc \
+curl -s http://localhost:8080/a2a/rpc \
   -H 'Content-Type: application/json' \
   -d "{\"jsonrpc\":\"2.0\",\"method\":\"SubscribeToTask\",\"params\":{\"taskId\":\"$TASK_ID\",\"afterSequence\":0,\"limit\":20},\"id\":\"4\"}"
 
-curl -N "http://localhost:8081/a2a/sse/$TASK_ID?afterSequence=0&limit=100"
+curl -N "http://localhost:8080/a2a/sse/$TASK_ID?afterSequence=0&limit=100"
 
 # Cancel task
-curl -s http://localhost:8081/a2a/rpc \
+curl -s http://localhost:8080/a2a/rpc \
   -H 'Content-Type: application/json' \
   -d "{\"jsonrpc\":\"2.0\",\"method\":\"CancelTask\",\"params\":{\"taskId\":\"$TASK_ID\",\"reason\":\"manual stop\"},\"id\":\"5\"}"
 
 # Agent card endpoints
-curl -s http://localhost:8081/.well-known/agent-card.json
-curl -s http://localhost:8081/a2a/rpc \
+curl -s http://localhost:8080/.well-known/agent-card.json
+curl -s http://localhost:8080/a2a/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"GetExtendedAgentCard","params":{"includeSignature":true},"id":"6"}'
 ```
@@ -231,6 +249,9 @@ mvn -pl camel-a2a-component test
 
 # Sample module only
 mvn -pl samples/a2a-yaml-service test
+
+# Sample Redis persistence default wiring test only
+mvn -pl samples/a2a-yaml-service -Dtest=SamplePersistenceDefaultsTest test
 
 # Persistence-backed component tests
 mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true

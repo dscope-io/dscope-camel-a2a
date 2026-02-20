@@ -52,6 +52,12 @@ cd /Users/roman/Projects/DScope/CamelA2AComponent/samples/a2a-yaml-service
 mvn exec:java
 ```
 
+Sample runners default to Redis persistence (`camel.persistence.enabled=true`,
+`camel.persistence.backend=redis`) and resolve Redis URI from `REDIS_URI` env var,
+falling back to `redis://localhost:6379`.
+Sample HTTP endpoints use `a2a.sample.port` from `application.yaml` and default to
+`8080` (`A2A_SAMPLE_PORT` can override it).
+
 Standalone mode:
 
 ```bash
@@ -59,13 +65,20 @@ cd /Users/roman/Projects/DScope/CamelA2AComponent/samples/a2a-yaml-service
 mvn exec:java -Dexec.args="standalone"
 ```
 
+Override sample service port:
+
+```bash
+cd /Users/roman/Projects/DScope/CamelA2AComponent/samples/a2a-yaml-service
+A2A_SAMPLE_PORT=8090 mvn exec:java
+```
+
 ### 5.2 Endpoints to Verify
 
 - `GET http://localhost:8080/health`
 - `GET http://localhost:8080/diagnostics`
-- `POST http://localhost:8081/a2a/rpc`
-- `GET http://localhost:8081/a2a/sse/{taskId}`
-- `GET http://localhost:8081/.well-known/agent-card.json`
+- `POST http://localhost:8080/a2a/rpc`
+- `GET http://localhost:8080/a2a/sse/{taskId}`
+- `GET http://localhost:8080/.well-known/agent-card.json`
 
 ## 6. Typical Development Workflow
 
@@ -201,6 +214,7 @@ Before release work, run:
 mvn test
 mvn -pl camel-a2a-component test
 mvn -pl samples/a2a-yaml-service test
+mvn -pl samples/a2a-yaml-service -Dtest=SamplePersistenceDefaultsTest test
 ```
 
 Then follow `/Users/roman/Projects/DScope/CamelA2AComponent/docs/PUBLISH_GUIDE.md`.

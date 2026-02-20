@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PersistentA2ATaskEventService extends InMemoryTaskEventService {
 
     private static final String FLOW_TYPE = "a2a.task";
+    private static final int VERSION_READ_PAGE_SIZE = 500;
 
     private final FlowStateStore stateStore;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -114,7 +115,23 @@ public class PersistentA2ATaskEventService extends InMemoryTaskEventService {
     }
 
     private long resolveCurrentVersion(String taskId) {
-        RehydratedState rehydrated = stateStore.rehydrate(FLOW_TYPE, taskId);
-        return rehydrated.tailEvents() == null ? 0 : rehydrated.tailEvents().size();
+        long afterSequence = 0L;
+        long maxSequence = 0L;
+
+        while (true) {
+            List<PersistedEvent> page = stateStore.readEvents(FLOW_TYPE, taskId, afterSequence, VERSION_READ_PAGE_SIZE);
+            if (page == null || page.isEmpty()) {
+                return maxSequence;
+            }
+
+            for (PersistedEvent persistedEvent : page) {
+                maxSequence = Math.max(maxSequence, persistedEvent.sequence());
+            }
+
+            afterSequence = maxSequence;
+            if (page.size() < VERSION_READ_PAGE_SIZE) {
+                return maxSequence;
+            }
+        }
     }
 }

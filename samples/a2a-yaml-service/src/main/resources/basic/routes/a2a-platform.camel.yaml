@@ -1,0 +1,126 @@
+- route:
+    id: routeab28
+    from:
+      id: fromef0f
+      uri: undertow
+      parameters:
+        httpURI: http://0.0.0.0:{{a2a.sample.port}}/health?httpMethodRestrict=GET
+      steps:
+        - setBody:
+            id: setBodyed57
+            expression:
+              constant:
+                id: constantf37e
+                expression: "{\"status\":\"UP\"}"
+- route:
+    id: route7fd1
+    from:
+      id: frome69e
+      uri: undertow
+      parameters:
+        httpURI: http://0.0.0.0:{{a2a.sample.port}}/diagnostics?httpMethodRestrict=GET
+      steps:
+        - doTry:
+            id: doTry1781
+            doCatch:
+              - id: doCatch1f6c
+                exception:
+                  - java.lang.Exception
+                steps:
+                  - to:
+                      id: tobd8a
+                      uri: bean
+                      parameters:
+                        beanName: a2aErrorProcessor
+            steps:
+              - to:
+                  id: tof741
+                  uri: bean
+                  parameters:
+                    beanName: a2aDiagnosticsProcessor
+- route:
+    id: routeaa49
+    from:
+      id: froma344
+      uri: undertow
+      parameters:
+        httpURI: http://0.0.0.0:{{a2a.sample.port}}/a2a/rpc?httpMethodRestrict=POST
+      steps:
+        - doTry:
+            id: doTryb5c4
+            doCatch:
+              - id: doCatch1927
+                exception:
+                  - java.lang.Exception
+                steps:
+                  - to:
+                      id: to5f88
+                      uri: bean
+                      parameters:
+                        beanName: a2aErrorProcessor
+            steps:
+              - convertBodyTo:
+                  id: convertBodyTo053e
+                  type: java.lang.String
+              - to:
+                  id: to5984
+                  uri: bean
+                  parameters:
+                    beanName: a2aJsonRpcEnvelopeProcessor
+              - to:
+                  id: to48b5
+                  uri: bean
+                  parameters:
+                    beanName: a2aMethodDispatchProcessor
+- route:
+    id: routebed0
+    from:
+      id: from9bed
+      uri: undertow
+      parameters:
+        httpURI: http://0.0.0.0:{{a2a.sample.port}}/a2a/sse/{taskId}?httpMethodRestrict=GET
+      steps:
+        - doTry:
+            id: doTry3f0d
+            doCatch:
+              - id: doCatch89da
+                exception:
+                  - java.lang.Exception
+                steps:
+                  - to:
+                      id: to8d31
+                      uri: bean
+                      parameters:
+                        beanName: a2aErrorProcessor
+            steps:
+              - to:
+                  id: to31d2
+                  uri: bean
+                  parameters:
+                    beanName: a2aTaskSseProcessor
+- route:
+    id: route6baf
+    from:
+      id: fromca7c
+      uri: undertow
+      parameters:
+        httpURI: http://0.0.0.0:{{a2a.sample.port}}/.well-known/agent-card.json?httpMethodRestrict=GET
+      steps:
+        - doTry:
+            id: doTryec27
+            doCatch:
+              - id: doCatch3b5e
+                exception:
+                  - java.lang.Exception
+                steps:
+                  - to:
+                      id: tof93a
+                      uri: bean
+                      parameters:
+                        beanName: a2aErrorProcessor
+            steps:
+              - to:
+                  id: to4b6d
+                  uri: bean
+                  parameters:
+                    beanName: a2aAgentCardDiscoveryProcessor

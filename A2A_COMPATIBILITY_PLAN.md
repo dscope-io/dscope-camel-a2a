@@ -30,7 +30,7 @@ Make `camel-a2a-component` fully compatible with the latest A2A protocol, while 
    - Request-only structure; missing protocol-complete response, task, and artifact models.
 3. `camel-a2a-component/src/main/java/io/dscope/camel/a2a/A2AConsumer.java`
    - Adds a simple echo-style route, not a protocol dispatcher.
-4. `samples/a2a-yaml-service/src/main/resources/basic/routes/a2a-platform.yaml`
+4. `samples/a2a-yaml-service/src/main/resources/basic/routes/a2a-platform.camel.yaml`
    - No A2A method routing pipeline for production-compatible behavior.
 5. Project architecture
    - Missing MCP-style processor/catalog/service modularization and bootstrapping support.

@@ -1,0 +1,202 @@
+----------------------------------------------------------------
+Thu Feb 19 16:24:41 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance a816c00e-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aSupportTestff658f60329d48fbbd7e934cc056aeae with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:42 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 65548115-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranch74b43140e89149ca90abd0e4579c80a8 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:42 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 19660231-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranchf650ffebfdbe4a33bcc508dec81b7787 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 44874357-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBrancha8e8ec6fc9944095ab47a8c50642edfc with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 89c4c45e-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranch6f2125c565cb4632bef539ced91a625c with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 6d5f856d-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranch51ffb21c090a454ea92a641fb8ad4467 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 55d90689-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranchb4a1f27addce4c20bc774b2ac016de31 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance c57407a1-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranch08965f4885b449c58e04cf5f5cdfd60a with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 4a5988bd-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranch52df90880d8141d680ff622101d3d562 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 542c89d5-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranchb74223dee4c44474be4161031ce27d21 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance aa8f8aed-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranchfe065d8ac1d143e788b81e4d96c3591a with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 32938bf4-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranch92b6fe861783423caf09e3716d18fa93 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:43 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 7b204cff-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aBranchd5fbfe417b024b529dd25162c35f9fa8 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:44 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 7b43ce06-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aPersistence2606615794bf48409d3050382e54acfe with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Feb 19 16:24:44 PST 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance 7dbd8f24-019c-786f-3a30-0000168bc620 
+on database directory memory:/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component/a2aPersistencef140338e81dd4576919bf8e32dd6f7aa with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1cf4f579 
+Loaded from file:/Users/roman/.m2/repository/org/apache/derby/derby/10.17.1.0/derby-10.17.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-58
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+jvmci-23.1-b37
+user.dir=/Users/roman/Projects/DScope/CamelA2AComponent/camel-a2a-component
+os.name=Mac OS X
+os.arch=aarch64
+os.version=15.7.3
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

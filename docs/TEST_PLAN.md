@@ -11,6 +11,7 @@ This plan covers:
 - Push notification config CRUD and retry stats
 - Agent Card discovery and extended card retrieval
 - Sample route exposure and diagnostics output
+- Sample Redis persistence default wiring
 
 ## Automated Test Commands
 
@@ -26,17 +27,27 @@ Run per module:
 mvn -pl camel-a2a-component test
 mvn -pl samples/a2a-yaml-service test
 
+# Sample module Redis default wiring test only
+mvn -pl samples/a2a-yaml-service -Dtest=SamplePersistenceDefaultsTest test
+
 # Component tests with JDBC persistence mode
 mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true
 
+# Component persistence JDBC backend tests
+mvn -pl camel-a2a-component -Dtest=PersistentA2APersistenceJdbcTest test
+
 # Component tests with Redis persistence mode (requires reachable Redis)
 mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=redis -Dcamel.persistence.redis.uri=redis://localhost:6379
+
+# Component persistence Redis backend tests (requires reachable Redis)
+mvn -pl camel-a2a-component -Dtest=PersistentA2APersistenceRedisTest test
 ```
 
 Expected result:
 
 - Build succeeds
 - No unit/integration test failures
+- `SamplePersistenceDefaultsTest` confirms sample defaults to Redis persistence while preserving explicit overrides
 
 ## Deterministic Manual Verification
 
@@ -98,7 +109,7 @@ Expected:
 ### 5. Agent Card
 
 ```bash
-curl -s http://localhost:8081/.well-known/agent-card.json
+curl -s http://localhost:8080/.well-known/agent-card.json
 ```
 
 And via JSON-RPC:

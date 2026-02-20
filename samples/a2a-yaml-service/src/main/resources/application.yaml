@@ -1,0 +1,10 @@
+camel:
+  persistence:
+    enabled: true
+    backend: redis
+    redis:
+      uri: ${REDIS_URI:redis://localhost:6379}
+
+a2a:
+  sample:
+    port: ${A2A_SAMPLE_PORT:8080}
