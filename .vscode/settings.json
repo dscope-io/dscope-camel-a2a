@@ -1,4 +1,14 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.debug.settings.onBuildFailureProceed": true
+    "java.debug.settings.onBuildFailureProceed": true,
+    "chat.tools.terminal.autoApprove": {
+        "/^gh repo edit dscope-io/dscope-camel-a2a --add-topic agent-to-agent --add-topic a2a --add-topic apache-camel --add-topic camel-component --add-topic json-rpc --add-topic sse --add-topic java --add-topic integration --add-topic ai-agents$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^gh api -H \"Accept: application/vnd\\.github\\+json\" /repos/dscope-io/dscope-camel-a2a/topics$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
 }
