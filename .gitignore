@@ -3,4 +3,4 @@ camel-a2a-component/derby.log
 target/
 .vscode/
 .idea/
-
+samples/a2a-yaml-service/target
