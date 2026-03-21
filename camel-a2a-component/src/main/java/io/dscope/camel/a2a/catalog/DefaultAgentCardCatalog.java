@@ -5,16 +5,19 @@ import io.dscope.camel.a2a.config.A2AProtocolMethods;
 import io.dscope.camel.a2a.model.AgentCapabilities;
 import io.dscope.camel.a2a.model.AgentCard;
 import io.dscope.camel.a2a.model.AgentSecurityScheme;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default catalog implementation for discovery and extended cards.
  */
 public class DefaultAgentCardCatalog implements AgentCardCatalog {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultAgentCardCatalog.class);
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final String agentId;
@@ -43,16 +46,19 @@ public class DefaultAgentCardCatalog implements AgentCardCatalog {
 
     @Override
     public AgentCard getDiscoveryCard() {
+        LOG.debug("Generating discovery agent card for agentId={}, endpointUrl={}", agentId, endpointUrl);
         AgentCard card = baseCard();
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("discovery", true);
         card.setMetadata(metadata);
         applyPolicy(card);
+        LOG.debug("Discovery card generated for agentId={}", agentId);
         return card;
     }
 
     @Override
     public AgentCard getExtendedCard() {
+        LOG.debug("Generating extended agent card for agentId={}, endpointUrl={}", agentId, endpointUrl);
         AgentCard card = baseCard();
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("discovery", true);
@@ -68,6 +74,7 @@ public class DefaultAgentCardCatalog implements AgentCardCatalog {
         }
         card.setMetadata(metadata);
         applyPolicy(card);
+        LOG.debug("Extended card generated for agentId={}, signaturePresent={}", agentId, signature != null);
         return card;
     }
 
@@ -75,20 +82,33 @@ public class DefaultAgentCardCatalog implements AgentCardCatalog {
     public String getCardSignature(AgentCard card) {
         try {
             String canonical = mapper.writeValueAsString(card);
+            LOG.debug("Signing agent card for agentId={}, canonicalLength={}",
+                card == null ? "<null>" : card.getAgentId(),
+                canonical.length());
             String signature = signer.sign(canonical);
             if (signature != null && !verifier.verify(canonical, signature)) {
+                LOG.error("Signature verification failed for agentId={}", card == null ? "<null>" : card.getAgentId());
                 throw new IllegalStateException("Agent card signature verification failed");
             }
             return signature;
+        } catch (IllegalStateException e) {
+            throw e;
         } catch (RuntimeException e) {
+            LOG.error("Unexpected runtime failure while signing agent card for agentId={}", agentId, e);
             throw e;
         } catch (Exception e) {
+            LOG.error("Failed to sign agent card for agentId={}", agentId, e);
             throw new IllegalStateException("Failed to sign agent card", e);
         }
     }
 
     private void applyPolicy(AgentCard card) {
-        policyChecker.validate(card);
+        try {
+            policyChecker.validate(card);
+        } catch (RuntimeException e) {
+            LOG.error("Agent card policy validation failed for agentId={}", card.getAgentId(), e);
+            throw e;
+        }
     }
 
     private AgentCard baseCard() {

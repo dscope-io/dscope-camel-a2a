@@ -2,6 +2,10 @@ package io.dscope.camel.a2a.catalog;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DefaultAgentCardCatalogTest {
@@ -43,5 +47,34 @@ class DefaultAgentCardCatalogTest {
         String signature = catalog.getCardSignature(card);
         assertEquals("sig-123", signature);
         assertEquals(Boolean.TRUE, card.getMetadata().get("extended"));
+    }
+
+    @Test
+    void signatureVerificationFailureIsLogged() {
+        AgentCardSigner signer = canonicalJson -> "sig-123";
+        AgentCardSignatureVerifier verifier = (canonicalJson, signature) -> false;
+        DefaultAgentCardCatalog catalog = new DefaultAgentCardCatalog(
+            "agent-log",
+            "Agent Log",
+            "Extended card",
+            "http://localhost:8081/a2a/rpc",
+            signer,
+            verifier,
+            new AllowAllAgentCardPolicyChecker()
+        );
+
+        PrintStream originalErr = System.err;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(captured, true, StandardCharsets.UTF_8));
+        try {
+            var card = catalog.getDiscoveryCard();
+            IllegalStateException error = assertThrows(IllegalStateException.class, () -> catalog.getCardSignature(card));
+            assertEquals("Agent card signature verification failed", error.getMessage());
+        } finally {
+            System.setErr(originalErr);
+        }
+
+        String logOutput = captured.toString(StandardCharsets.UTF_8);
+        assertTrue(logOutput.contains("Signature verification failed for agentId=agent-log"));
     }
 }
