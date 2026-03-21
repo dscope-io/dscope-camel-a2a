@@ -1,4 +1,6 @@
 .LCKpom.xml~
 camel-a2a-component/derby.log
 target/
+.vscode/
+.idea/
 
