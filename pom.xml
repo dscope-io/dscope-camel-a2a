@@ -4,11 +4,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.dscope.camel</groupId>
   <artifactId>camel-a2a</artifactId>
-  <version>1.0.1</version>
+  <version>1.1.0</version>
   <packaging>pom</packaging>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <camel.version>4.15.0</camel.version>
+    <camel.persistence.version>1.2.0</camel.persistence.version>
   </properties>
 
   <modules>
