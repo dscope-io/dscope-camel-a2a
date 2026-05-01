@@ -10,13 +10,16 @@ This guide defines a repeatable release process for the Camel A2A component and 
 2. All tests pass:
 
 ```bash
-mvn test
+mvn clean test
 mvn -pl camel-a2a-component test
 mvn -pl samples/a2a-yaml-service test
 ```
 
 3. `README.md` and docs reflect current routes and method behavior.
 4. Version numbers are set correctly in `pom.xml` files.
+5. Release baseline is confirmed:
+   - Camel A2A version `1.1.0`
+   - Camel Persistence dependency version `1.2.0`
 
 ## Build Artifacts
 
@@ -26,10 +29,17 @@ From repo root:
 mvn clean package
 ```
 
+For local Maven publication before remote release, run:
+
+```bash
+mvn install
+```
+
 Primary outputs:
 
 - Component JAR: `camel-a2a-component/target/`
 - Sample JAR: `samples/a2a-yaml-service/target/`
+- Local Maven artifacts: `~/.m2/repository/io/dscope/camel/`
 
 ## Versioning
 
@@ -41,8 +51,9 @@ Primary outputs:
 
 1. Commit release changes.
 2. Create and push a release tag (for example `v0.5.0`).
-3. Publish artifacts using your configured Maven repository workflow.
-4. Create GitHub release notes summarizing:
+3. Run `mvn install` if local consumers need the release immediately.
+4. Publish artifacts using your configured Maven repository workflow.
+5. Create GitHub release notes summarizing:
    - Added methods/features
    - Breaking changes (if any)
    - Verification/test status

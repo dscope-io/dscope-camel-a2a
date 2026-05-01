@@ -32,6 +32,14 @@ mvn clean test
 
 This compiles all modules and runs tests.
 
+To make the current release artifacts available to other local projects:
+
+```bash
+mvn install
+```
+
+This installs Camel A2A `1.1.0` artifacts into the local Maven repository. The build currently uses Camel Persistence `1.2.0` dependencies.
+
 ## 4. Repository Layout
 
 - `/Users/roman/Projects/DScope/CamelA2AComponent/pom.xml`
@@ -98,6 +106,9 @@ mvn -pl camel-a2a-component test
 
 # Full verification
 mvn test
+
+# Publish locally for dependent projects
+mvn install
 ```
 
 ## 7. Where to Implement What
@@ -215,6 +226,12 @@ mvn test
 mvn -pl camel-a2a-component test
 mvn -pl samples/a2a-yaml-service test
 mvn -pl samples/a2a-yaml-service -Dtest=SamplePersistenceDefaultsTest test
+```
+
+If the release needs to be consumed locally before remote publication, also run:
+
+```bash
+mvn install
 ```
 
 Then follow `/Users/roman/Projects/DScope/CamelA2AComponent/docs/PUBLISH_GUIDE.md`.

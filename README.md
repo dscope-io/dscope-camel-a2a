@@ -6,6 +6,11 @@
 
 Apache Camel component and sample runtime for Agent-to-Agent (A2A) protocol workflows.
 
+Current release baseline:
+
+- Camel A2A version `1.1.0`
+- Shared Camel Persistence dependencies `1.2.0`
+
 This repository provides:
 
 - A reusable Camel component (`a2a:`) for producer/consumer integration.
@@ -244,6 +249,9 @@ From root:
 # Full build + test
 mvn clean test
 
+# Install all 1.1.0 artifacts to local Maven
+mvn install
+
 # Component only
 mvn -pl camel-a2a-component test
 
@@ -256,6 +264,8 @@ mvn -pl samples/a2a-yaml-service -Dtest=SamplePersistenceDefaultsTest test
 # Persistence-backed component tests
 mvn -pl camel-a2a-component test -Dcamel.persistence.enabled=true -Dcamel.persistence.backend=jdbc -Dcamel.persistence.jdbc.url=jdbc:derby:memory:a2a;create=true
 ```
+
+Local Maven install outputs are published under `~/.m2/repository/io/dscope/camel/`, including `camel-a2a-component:1.1.0` and the sample module artifacts.
 
 Package artifacts:
 
