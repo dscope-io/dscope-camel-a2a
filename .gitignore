@@ -5,4 +5,4 @@ target/
 .vscode/
 .idea/
 samples/a2a-yaml-service/target
-camel-a2a-component/derby.log
+

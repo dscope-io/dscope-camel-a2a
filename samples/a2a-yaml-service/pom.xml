@@ -7,11 +7,11 @@
   <parent>
     <groupId>io.dscope.camel</groupId>
     <artifactId>camel-a2a-samples</artifactId>
-    <version>1.1.0</version>
+    <version>1.0.1</version>
   </parent>
 
   <artifactId>camel-a2a-sample-a2a-yaml-service</artifactId>
-  <name>Camel A2A Component - Sample :: A2A YAML Service</name>
+    <version>1.2.0</version>
   <description>Sample application demonstrating the A2A Camel component with YAML-based routes</description>
 
   <dependencies>
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>io.dscope.camel</groupId>
       <artifactId>camel-persistence-redis</artifactId>
-      <version>${camel.persistence.version}</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
