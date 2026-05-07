@@ -306,6 +306,7 @@ JDBC backend properties:
 - Developer guide: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/development.md`
 - Test plan: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/TEST_PLAN.md`
 - Publish guide: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/PUBLISH_GUIDE.md`
+- Maven Central deployment: `/Users/roman/Projects/DScope/CamelA2AComponent/docs/MAVEN_CENTRAL_DEPLOYMENT.md`
 
 ## License
 

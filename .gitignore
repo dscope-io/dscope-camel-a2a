@@ -1,4 +1,5 @@
 .LCKpom.xml~
+pom.xml.release-backup
 camel-a2a-component/derby.log
 target/
 .vscode/

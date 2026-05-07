@@ -41,6 +41,8 @@ Primary outputs:
 - Sample JAR: `samples/a2a-yaml-service/target/`
 - Local Maven artifacts: `~/.m2/repository/io/dscope/camel/`
 
+For Maven Central publication workflow details, follow `docs/MAVEN_CENTRAL_DEPLOYMENT.md`.
+
 ## Versioning
 
 1. Update parent version in root `pom.xml`.
