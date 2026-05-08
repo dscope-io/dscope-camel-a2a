@@ -51,19 +51,19 @@
       <dependency>
       <groupId>io.dscope.camel</groupId>
       <artifactId>camel-persistence-core</artifactId>
-      <version>1.0.0</version>
+        <version>${camel.persistence.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.dscope.camel</groupId>
       <artifactId>camel-persistence-jdbc</artifactId>
-      <version>1.0.0</version>
+      <version>${camel.persistence.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.dscope.camel</groupId>
       <artifactId>camel-persistence-redis</artifactId>
-      <version>1.0.0</version>
+      <version>${camel.persistence.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -136,8 +136,7 @@
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
-          <finalName>camel-a2a</finalName>
-          <appendAssemblyId>false</appendAssemblyId>
+          <appendAssemblyId>true</appendAssemblyId>
         </configuration>
         <executions>
           <execution>
