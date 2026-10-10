@@ -38,7 +38,13 @@ public class A2AErrorProcessor implements Processor {
         if (error instanceof A2AMethodNotFoundException || error instanceof NoSuchMethodException) {
             return -32601;
         }
+        if (error instanceof A2AIllegalTaskStateException) {
+            return -32002;
+        }
         if (error instanceof A2AInvalidParamsException) {
+            if (error.getMessage() != null && error.getMessage().startsWith("Task not found:")) {
+                return -32001;
+            }
             return -32602;
         }
         if (error instanceof A2AJsonRpcValidationException || error instanceof IllegalArgumentException) {

@@ -5,7 +5,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.dto.DeletePushNotificationConfigRequest;
-import io.dscope.camel.a2a.model.dto.DeletePushNotificationConfigResponse;
 import io.dscope.camel.a2a.service.A2APushNotificationConfigService;
 
 /**
@@ -29,9 +28,6 @@ public class DeletePushNotificationConfigProcessor implements Processor {
         DeletePushNotificationConfigRequest request = mapper.convertValue(params, DeletePushNotificationConfigRequest.class);
         boolean deleted = configService.delete(request);
 
-        DeletePushNotificationConfigResponse response = new DeletePushNotificationConfigResponse();
-        response.setConfigId(request.getConfigId());
-        response.setDeleted(deleted);
-        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, java.util.Map.of());
     }
 }

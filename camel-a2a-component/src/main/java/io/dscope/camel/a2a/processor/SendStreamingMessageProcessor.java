@@ -43,6 +43,8 @@ public class SendStreamingMessageProcessor implements Processor {
         sendRequest.setConversationId(request.getConversationId());
         sendRequest.setIdempotencyKey(request.getIdempotencyKey());
         sendRequest.setMetadata(request.getMetadata());
+        sendRequest.setConfiguration(request.getConfiguration());
+        sendRequest.setTenant(request.getTenant());
 
         Task task = taskService.sendMessage(sendRequest);
         taskService.transitionTask(task.getTaskId(), TaskState.WAITING, "Streaming updates started");

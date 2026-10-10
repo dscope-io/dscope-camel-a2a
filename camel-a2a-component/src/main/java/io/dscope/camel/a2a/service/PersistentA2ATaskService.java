@@ -80,6 +80,10 @@ public class PersistentA2ATaskService implements A2ATaskService {
 
             String now = Instant.now().toString();
             String taskId = UUID.randomUUID().toString();
+            String contextId = message.getContextId() == null || message.getContextId().isBlank()
+                ? UUID.randomUUID().toString() : message.getContextId();
+            message.setContextId(contextId);
+            message.setTaskId(taskId);
 
             TaskStatus status = new TaskStatus();
             status.setState(TaskState.CREATED);
@@ -88,6 +92,7 @@ public class PersistentA2ATaskService implements A2ATaskService {
 
             Task task = new Task();
             task.setTaskId(taskId);
+            task.setContextId(contextId);
             task.setStatus(status);
             task.setLatestMessage(message);
             task.setMessages(List.of(message));

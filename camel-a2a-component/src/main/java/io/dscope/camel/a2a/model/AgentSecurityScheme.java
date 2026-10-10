@@ -48,10 +48,12 @@ public class AgentSecurityScheme {
         }
     }
 
+    @JsonIgnore
     public String getDescription() {
         return description;
     }
 
+    @JsonIgnore
     public void setDescription(String description) {
         this.description = description;
     }

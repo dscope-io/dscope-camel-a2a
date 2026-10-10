@@ -6,7 +6,6 @@ import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.PushNotificationConfig;
 import io.dscope.camel.a2a.model.dto.GetPushNotificationConfigRequest;
-import io.dscope.camel.a2a.model.dto.GetPushNotificationConfigResponse;
 import io.dscope.camel.a2a.service.A2APushNotificationConfigService;
 
 /**
@@ -30,8 +29,6 @@ public class GetPushNotificationConfigProcessor implements Processor {
         GetPushNotificationConfigRequest request = mapper.convertValue(params, GetPushNotificationConfigRequest.class);
         PushNotificationConfig config = configService.get(request);
 
-        GetPushNotificationConfigResponse response = new GetPushNotificationConfigResponse();
-        response.setConfig(config);
-        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, config);
     }
 }

@@ -59,8 +59,11 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
 
         String now = Instant.now().toString();
         PushNotificationConfig config = new PushNotificationConfig();
-        config.setConfigId(UUID.randomUUID().toString());
+        config.setConfigId(request.getId() == null || request.getId().isBlank()
+            ? UUID.randomUUID().toString() : request.getId());
         config.setTaskId(normalizeBlank(request.getTaskId()));
+        config.setToken(request.getToken());
+        config.setAuthentication(request.getAuthentication());
         config.setEndpointUrl(request.getEndpointUrl());
         config.setSecret(request.getSecret());
         config.setHeaders(request.getHeaders());
@@ -201,6 +204,8 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
         PushNotificationConfig copy = new PushNotificationConfig();
         copy.setConfigId(source.getConfigId());
         copy.setTaskId(source.getTaskId());
+        copy.setToken(source.getToken());
+        copy.setAuthentication(source.getAuthentication());
         copy.setEndpointUrl(source.getEndpointUrl());
         copy.setSecret(source.getSecret());
         copy.setEnabled(source.isEnabled());

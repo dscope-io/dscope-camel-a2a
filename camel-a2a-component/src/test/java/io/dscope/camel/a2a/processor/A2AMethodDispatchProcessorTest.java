@@ -48,7 +48,7 @@ class A2AMethodDispatchProcessorTest {
             return attempt;
         });
         eventService.addListener(pushConfigService::onTaskEvent);
-        envelopeProcessor = new A2AJsonRpcEnvelopeProcessor(A2AProtocolMethods.CORE_METHODS);
+        envelopeProcessor = new A2AJsonRpcEnvelopeProcessor(A2AProtocolMethods.SUPPORTED_METHODS);
         DefaultAgentCardCatalog agentCardCatalog = new DefaultAgentCardCatalog(
             "test-agent",
             "Test Agent",
@@ -125,23 +125,23 @@ class A2AMethodDispatchProcessorTest {
     }
 
     @Test
-    void sendStreamingAndSubscribeProduceStreamMetadata() throws Exception {
-        JsonNode streamingResponse = execute("""
+    void sendStreamingAndSubscribeReturnSseTaskResponses() throws Exception {
+        Exchange streamingExchange = executeExchange("""
             {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"stream-m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello stream"}]}},"id":"21"}
             """);
-        String taskId = streamingResponse.get("result").get("task").get("taskId").asText();
-        String subscriptionId = streamingResponse.get("result").get("subscriptionId").asText();
-        String streamUrl = streamingResponse.get("result").get("streamUrl").asText();
+        assertEquals("text/event-stream", streamingExchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
+        JsonNode streamingResponse = readSseResponse(streamingExchange);
+        String taskId = streamingResponse.get("result").get("task").get("id").asText();
 
         assertFalse(taskId.isBlank());
-        assertFalse(subscriptionId.isBlank());
-        assertTrue(streamUrl.contains("/a2a/sse/" + taskId));
+        assertEquals("TASK_STATE_COMPLETED",
+            streamingResponse.get("result").get("task").get("status").get("state").asText());
 
-        JsonNode subscribeResponse = execute("""
+        Exchange subscribeExchange = executeExchange("""
             {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"taskId":"%s","afterSequence":0,"limit":20},"id":"22"}
             """.formatted(taskId));
-        assertTrue(subscribeResponse.get("result").get("terminal").asBoolean());
-        assertTrue(subscribeResponse.get("result").get("streamUrl").asText().contains("/a2a/sse/" + taskId));
+        assertEquals("text/event-stream", subscribeExchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
+        assertEquals(taskId, readSseResponse(subscribeExchange).get("result").get("task").get("id").asText());
     }
 
     @Test
@@ -149,14 +149,14 @@ class A2AMethodDispatchProcessorTest {
         JsonNode create = execute("""
             {"jsonrpc":"2.0","method":"CreatePushNotificationConfig","params":{"taskId":"t-1","endpointUrl":"https://example.test/hook","maxRetries":2,"retryBackoffMs":0},"id":"31"}
             """);
-        String configId = create.get("result").get("config").get("configId").asText();
+        String configId = create.get("result").get("id").asText();
         assertFalse(configId.isBlank());
 
         JsonNode get = execute("""
             {"jsonrpc":"2.0","method":"GetPushNotificationConfig","params":{"configId":"%s"},"id":"32"}
             """.formatted(configId));
-        assertEquals(configId, get.get("result").get("config").get("configId").asText());
-        assertEquals("https://example.test/hook", get.get("result").get("config").get("endpointUrl").asText());
+        assertEquals(configId, get.get("result").get("id").asText());
+        assertEquals("https://example.test/hook", get.get("result").get("url").asText());
 
         JsonNode list = execute("""
             {"jsonrpc":"2.0","method":"ListPushNotificationConfigs","params":{"taskId":"t-1","limit":10},"id":"33"}
@@ -167,7 +167,7 @@ class A2AMethodDispatchProcessorTest {
         JsonNode delete = execute("""
             {"jsonrpc":"2.0","method":"DeletePushNotificationConfig","params":{"configId":"%s"},"id":"34"}
             """.formatted(configId));
-        assertTrue(delete.get("result").get("deleted").asBoolean());
+        assertTrue(delete.get("result").isObject());
     }
 
     @Test
@@ -177,6 +177,35 @@ class A2AMethodDispatchProcessorTest {
             """);
         assertEquals(-32602, response.get("error").get("code").asInt());
         assertEquals("35", response.get("id").asText());
+    }
+
+    @Test
+    void a2a101RequestFieldsAndPushMethodNamesAreAccepted() throws Exception {
+        JsonNode send = execute("""
+            {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"a2a-1","role":"ROLE_USER","parts":[{"text":"hello"}]},"configuration":{"acceptedOutputModes":["text/plain"],"returnImmediately":true}},"id":"a2a-send"}
+            """);
+        String taskId = send.path("result").path("id").asText();
+        assertFalse(taskId.isBlank());
+        assertFalse(send.path("result").path("contextId").asText().isBlank());
+
+        JsonNode create = execute("""
+            {"jsonrpc":"2.0","method":"CreateTaskPushNotificationConfig","params":{"taskId":"%s","id":"cfg-a2a","url":"https://example.test/a2a","token":"token"},"id":"a2a-create"}
+            """.formatted(taskId));
+        assertEquals("cfg-a2a", create.path("result").path("id").asText());
+        assertEquals("https://example.test/a2a", create.path("result").path("url").asText());
+
+        JsonNode get = execute("""
+            {"jsonrpc":"2.0","method":"GetTaskPushNotificationConfig","params":{"taskId":"%s","id":"cfg-a2a"},"id":"a2a-get"}
+            """.formatted(taskId));
+        assertEquals("cfg-a2a", get.path("result").path("id").asText());
+
+        JsonNode list = execute("""
+            {"jsonrpc":"2.0","method":"ListTaskPushNotificationConfigs","params":{"taskId":"%s","pageSize":10},"id":"a2a-list"}
+            """.formatted(taskId));
+        assertTrue(list.path("result").path("configs").isArray());
+        assertEquals("2.0", execute("""
+            {"jsonrpc":"2.0","method":"DeleteTaskPushNotificationConfig","params":{"taskId":"%s","id":"cfg-a2a"},"id":"a2a-delete"}
+            """.formatted(taskId)).path("jsonrpc").asText());
     }
 
     @Test
@@ -203,18 +232,13 @@ class A2AMethodDispatchProcessorTest {
             A2AProtocolMethods.LIST_TASKS,
             A2AProtocolMethods.CANCEL_TASK,
             A2AProtocolMethods.SUBSCRIBE_TO_TASK,
-            A2AProtocolMethods.CREATE_PUSH_NOTIFICATION_CONFIG,
-            A2AProtocolMethods.GET_PUSH_NOTIFICATION_CONFIG,
-            A2AProtocolMethods.LIST_PUSH_NOTIFICATION_CONFIGS,
-            A2AProtocolMethods.DELETE_PUSH_NOTIFICATION_CONFIG,
-            A2AProtocolMethods.GET_EXTENDED_AGENT_CARD
-            , A2AProtocolMethods.CREATE_TASK_PUSH_NOTIFICATION_CONFIG,
+            A2AProtocolMethods.GET_EXTENDED_AGENT_CARD,
+            A2AProtocolMethods.CREATE_TASK_PUSH_NOTIFICATION_CONFIG,
             A2AProtocolMethods.GET_TASK_PUSH_NOTIFICATION_CONFIG,
             A2AProtocolMethods.LIST_TASK_PUSH_NOTIFICATION_CONFIGS,
             A2AProtocolMethods.DELETE_TASK_PUSH_NOTIFICATION_CONFIG
         );
         Set<String> expected = new HashSet<>(A2AProtocolMethods.CORE_METHODS);
-        expected.remove(A2AProtocolMethods.LEGACY_INTENT_EXECUTE);
         assertEquals(expected, implementedMethods);
 
         JsonNode send = execute("""
@@ -225,7 +249,7 @@ class A2AMethodDispatchProcessorTest {
         JsonNode stream = execute("""
             {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"contract-stream","role":"user","parts":[{"partId":"p1","type":"text","text":"stream"}]}},"id":"c2"}
             """);
-        String streamingTaskId = stream.get("result").get("task").get("taskId").asText();
+        String streamingTaskId = stream.get("result").get("task").get("id").asText();
         String configTaskId = taskId.isBlank() ? streamingTaskId : taskId;
 
         assertEquals("2.0", execute("""
@@ -244,7 +268,7 @@ class A2AMethodDispatchProcessorTest {
         JsonNode create = execute("""
             {"jsonrpc":"2.0","method":"CreatePushNotificationConfig","params":{"taskId":"%s","endpointUrl":"https://example.test/contract","maxRetries":1,"retryBackoffMs":0},"id":"c7"}
             """.formatted(configTaskId));
-        String configId = create.get("result").get("config").get("configId").asText();
+        String configId = create.get("result").get("id").asText();
 
         assertEquals("2.0", execute("""
             {"jsonrpc":"2.0","method":"GetPushNotificationConfig","params":{"configId":"%s"},"id":"c8"}
@@ -261,6 +285,15 @@ class A2AMethodDispatchProcessorTest {
     }
 
     private JsonNode execute(String payload) throws Exception {
+        Exchange exchange = executeExchange(payload);
+        String responseBody = exchange.getMessage().getBody(String.class);
+        if (responseBody.startsWith("data: ")) {
+            responseBody = responseBody.substring(6).trim();
+        }
+        return mapper.readTree(responseBody);
+    }
+
+    private Exchange executeExchange(String payload) throws Exception {
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody(payload);
         try {
@@ -270,6 +303,11 @@ class A2AMethodDispatchProcessorTest {
             exchange.setProperty(Exchange.EXCEPTION_CAUGHT, e);
             errorProcessor.process(exchange);
         }
-        return mapper.readTree(exchange.getMessage().getBody(String.class));
+        return exchange;
+    }
+
+    private JsonNode readSseResponse(Exchange exchange) throws Exception {
+        String body = exchange.getMessage().getBody(String.class);
+        return mapper.readTree(body.substring("data: ".length()).trim());
     }
 }

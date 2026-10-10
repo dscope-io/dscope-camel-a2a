@@ -2,11 +2,13 @@ package io.dscope.camel.a2a.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Map;
 
 /**
  * A message or artifact content fragment.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Part {
 
     private String partId;
@@ -81,11 +83,23 @@ public class Part {
         this.text = text;
     }
 
+    @JsonIgnore
     public Object getData() {
         return data;
     }
 
+    @JsonIgnore
     public void setData(Object data) {
+        this.data = data;
+    }
+
+    @JsonProperty("data")
+    public Object getProtocolData() {
+        return text == null && raw == null && url == null ? data : null;
+    }
+
+    @JsonProperty("data")
+    public void setProtocolData(Object data) {
         this.data = data;
     }
 

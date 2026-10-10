@@ -71,4 +71,20 @@ class A2AErrorProcessorTest {
         assertTrue(node.get("id").isNull());
         assertEquals("application/a2a+json", exchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
     }
+
+    @Test
+    void mapsTaskProtocolErrorsToA2AErrorCodes() throws Exception {
+        var exchange = new DefaultExchange(new DefaultCamelContext());
+        exchange.setProperty(Exchange.EXCEPTION_CAUGHT, new A2AInvalidParamsException("Task not found: missing"));
+        new A2AErrorProcessor().process(exchange);
+        assertEquals(-32001, mapper.readTree(exchange.getMessage().getBody(String.class))
+            .path("error").path("code").asInt());
+
+        var invalidTransition = new DefaultExchange(new DefaultCamelContext());
+        invalidTransition.setProperty(Exchange.EXCEPTION_CAUGHT,
+            new A2AIllegalTaskStateException("Task cannot be canceled"));
+        new A2AErrorProcessor().process(invalidTransition);
+        assertEquals(-32002, mapper.readTree(invalidTransition.getMessage().getBody(String.class))
+            .path("error").path("code").asInt());
+    }
 }

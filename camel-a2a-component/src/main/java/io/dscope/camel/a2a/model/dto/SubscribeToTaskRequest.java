@@ -11,6 +11,7 @@ public class SubscribeToTaskRequest {
     private String taskId;
     private Long afterSequence;
     private Integer limit;
+    private String tenant;
 
     @JsonProperty("id")
     @JsonAlias("taskId")
@@ -37,5 +38,13 @@ public class SubscribeToTaskRequest {
 
     public void setLimit(Integer limit) {
         this.limit = limit;
+    }
+
+    public String getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(String tenant) {
+        this.tenant = tenant;
     }
 }

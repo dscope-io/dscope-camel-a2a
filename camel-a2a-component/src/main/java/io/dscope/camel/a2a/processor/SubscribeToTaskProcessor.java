@@ -39,13 +39,14 @@ public class SubscribeToTaskProcessor implements Processor {
             throw new A2AInvalidParamsException("SubscribeToTask limit must be greater than zero");
         }
 
-        taskService.getTask(request.getTaskId());
+        var task = taskService.getTask(request.getTaskId());
         long afterSequence = request.getAfterSequence() == null ? 0L : Math.max(0L, request.getAfterSequence());
         TaskSubscription subscription = eventService.createSubscription(request.getTaskId(), afterSequence);
 
         SubscribeToTaskResponse response = new SubscribeToTaskResponse();
         response.setSubscriptionId(subscription.getSubscriptionId());
         response.setTaskId(request.getTaskId());
+        response.setTask(task);
         response.setAfterSequence(afterSequence);
         response.setTerminal(eventService.isTaskTerminal(request.getTaskId()));
         response.setStreamUrl(buildStreamUrl(request.getTaskId(), subscription.getSubscriptionId(), afterSequence, request.getLimit()));

@@ -15,7 +15,7 @@ class A2AProducerTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    void processWrapsBodyInIntentExecutionMessage() throws Exception {
+    void processWrapsBodyInSendMessageRequest() throws Exception {
         var context = new DefaultCamelContext();
         var component = new A2AComponent();
         component.setCamelContext(context);
@@ -24,14 +24,18 @@ class A2AProducerTest {
         A2AProducer producer = new A2AProducer(endpoint);
 
         var exchange = new DefaultExchange(context);
-        exchange.getIn().setBody(Map.of("foo", "bar"));
+        exchange.getIn().setBody(Map.of("message", Map.of(
+            "messageId", "outbound-1",
+            "role", "ROLE_USER",
+            "parts", java.util.List.of(Map.of("text", "hello"))
+        )));
 
         producer.process(exchange);
 
         String json = exchange.getMessage().getBody(String.class);
         JsonNode node = mapper.readTree(json);
-        assertEquals("intent/execute", node.get("method").asText());
-        assertEquals("bar", node.get("params").get("foo").asText());
+        assertEquals("SendMessage", node.get("method").asText());
+        assertEquals("hello", node.get("params").get("message").get("parts").get(0).get("text").asText());
         assertTrue(node.hasNonNull("id"));
     }
 }

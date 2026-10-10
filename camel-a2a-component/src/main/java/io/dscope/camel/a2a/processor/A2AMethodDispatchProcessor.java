@@ -5,7 +5,10 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.config.A2AProtocolDefaults;
-import io.dscope.camel.a2a.config.A2AProtocolDefaults;
+import io.dscope.camel.a2a.config.A2AProtocolMethods;
+import io.dscope.camel.a2a.model.Task;
+import io.dscope.camel.a2a.model.dto.SendStreamingMessageResponse;
+import io.dscope.camel.a2a.model.dto.SubscribeToTaskResponse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,6 +48,24 @@ public class A2AMethodDispatchProcessor implements Processor {
 
         Object id = exchange.getProperty(A2AExchangeProperties.REQUEST_ID);
         Object result = exchange.getProperty(A2AExchangeProperties.METHOD_RESULT);
+
+        if (A2AProtocolMethods.SEND_STREAMING_MESSAGE.equals(method)
+            || A2AProtocolMethods.SUBSCRIBE_TO_TASK.equals(method)) {
+            Task task = result instanceof SendStreamingMessageResponse streamingResponse
+                ? streamingResponse.getTask()
+                : result instanceof SubscribeToTaskResponse subscription ? subscription.getTask() : null;
+            if (task == null) {
+                throw new IllegalStateException("A2A stream response requires a task");
+            }
+            Map<String, Object> streamEnvelope = Map.of(
+                "jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION,
+                "result", Map.of("task", task),
+                "id", id == null ? "" : id
+            );
+            exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "text/event-stream");
+            exchange.getMessage().setBody("data: " + mapper.writeValueAsString(streamEnvelope) + "\n\n");
+            return;
+        }
 
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION);

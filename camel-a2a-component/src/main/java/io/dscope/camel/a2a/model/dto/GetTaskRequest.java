@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class GetTaskRequest {
 
     private String taskId;
+    private Integer historyLength;
+    private String tenant;
 
     @JsonProperty("id")
     @JsonAlias("taskId")
@@ -19,5 +21,21 @@ public class GetTaskRequest {
     @JsonProperty("id")
     public void setTaskId(String taskId) {
         this.taskId = taskId;
+    }
+
+    public Integer getHistoryLength() {
+        return historyLength;
+    }
+
+    public void setHistoryLength(Integer historyLength) {
+        this.historyLength = historyLength;
+    }
+
+    public String getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(String tenant) {
+        this.tenant = tenant;
     }
 }

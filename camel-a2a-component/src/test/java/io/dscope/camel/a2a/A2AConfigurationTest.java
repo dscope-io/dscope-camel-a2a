@@ -13,7 +13,7 @@ class A2AConfigurationTest {
         assertNull(cfg.getAgent());
         assertEquals("ws://localhost:8081/a2a", cfg.getRemoteUrl());
         assertEquals("ws://0.0.0.0:8081/a2a", cfg.getServerUrl());
-        assertEquals("a2a/2025-06-18", cfg.getProtocolVersion());
+        assertEquals("1.0", cfg.getProtocolVersion());
         assertFalse(cfg.isSendToAll());
         assertNull(cfg.getAuthToken());
         assertEquals(3, cfg.getRetryCount());

@@ -39,6 +39,7 @@ public class TaskStatus {
             return null;
         }
         Message statusMessage = new Message();
+        statusMessage.setMessageId(java.util.UUID.randomUUID().toString());
         statusMessage.setRole("assistant");
         Part textPart = new Part();
         textPart.setText(message);

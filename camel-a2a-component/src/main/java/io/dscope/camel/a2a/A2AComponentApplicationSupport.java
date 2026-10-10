@@ -126,11 +126,15 @@ public class A2AComponentApplicationSupport {
         AgentCardSigner cardSigner = new NoopAgentCardSigner();
         AgentCardSignatureVerifier cardVerifier = new AllowAllAgentCardSignatureVerifier();
         AgentCardPolicyChecker cardPolicyChecker = new AllowAllAgentCardPolicyChecker();
+        String samplePort = System.getProperty(
+            "a2a.sample.port",
+            System.getenv().getOrDefault("A2A_SAMPLE_PORT", "8080")
+        );
         AgentCardCatalog agentCardCatalog = new DefaultAgentCardCatalog(
             "camel-a2a-agent",
             "Camel A2A Agent",
             "Apache Camel A2A compatibility service",
-            "http://localhost:8081/a2a/rpc",
+            "http://localhost:" + samplePort + "/a2a/rpc",
             cardSigner,
             cardVerifier,
             cardPolicyChecker
@@ -199,7 +203,7 @@ public class A2AComponentApplicationSupport {
         binder.bind(BEAN_GET_EXTENDED_AGENT_CARD_PROCESSOR, getExtendedAgentCardProcessor);
         binder.bind(BEAN_AGENT_CARD_DISCOVERY_PROCESSOR, agentCardDiscoveryProcessor);
         binder.bind(BEAN_DIAGNOSTICS_PROCESSOR, diagnosticsProcessor);
-        binder.bind(BEAN_ENVELOPE_PROCESSOR, new A2AJsonRpcEnvelopeProcessor(A2AProtocolMethods.CORE_METHODS));
+        binder.bind(BEAN_ENVELOPE_PROCESSOR, new A2AJsonRpcEnvelopeProcessor(A2AProtocolMethods.SUPPORTED_METHODS));
         binder.bind(BEAN_ERROR_PROCESSOR, new A2AErrorProcessor());
         binder.bind(BEAN_METHOD_PROCESSOR, new A2AMethodDispatchProcessor(methodMap));
         binder.bind(BEAN_LEGACY_METHOD_PROCESSOR, new IntentRouterProcessor());
