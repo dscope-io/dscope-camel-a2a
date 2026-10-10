@@ -114,6 +114,37 @@ class InMemoryPushNotificationConfigServiceTest {
         assertEquals("DeletePushNotificationConfig requires configId", deleteError.getMessage());
     }
 
+    @Test
+    void listPaginatesWithStableOrderingAndTaskOwnership() {
+        InMemoryPushNotificationConfigService service = new InMemoryPushNotificationConfigService(successNotifier());
+        service.create(createConfig("cfg-b", "task-1"));
+        service.create(createConfig("cfg-a", "task-1"));
+
+        ListPushNotificationConfigsRequest firstPageRequest = new ListPushNotificationConfigsRequest();
+        firstPageRequest.setTaskId("task-1");
+        firstPageRequest.setLimit(1);
+        List<PushNotificationConfig> firstPage = service.list(firstPageRequest);
+        assertEquals("cfg-a", firstPage.get(0).getConfigId());
+
+        ListPushNotificationConfigsRequest secondPageRequest = new ListPushNotificationConfigsRequest();
+        secondPageRequest.setTaskId("task-1");
+        secondPageRequest.setLimit(1);
+        secondPageRequest.setPageToken("1");
+        List<PushNotificationConfig> secondPage = service.list(secondPageRequest);
+        assertEquals("cfg-b", secondPage.get(0).getConfigId());
+
+        GetPushNotificationConfigRequest get = new GetPushNotificationConfigRequest();
+        get.setConfigId("cfg-a");
+        get.setTaskId("another-task");
+        assertThrows(A2AInvalidParamsException.class, () -> service.get(get));
+
+        DeletePushNotificationConfigRequest delete = new DeletePushNotificationConfigRequest();
+        delete.setConfigId("cfg-a");
+        delete.setTaskId("another-task");
+        assertFalse(service.delete(delete));
+        assertEquals("cfg-a", service.get(configRequest("cfg-a", "task-1")).getConfigId());
+    }
+
     private PushNotificationNotifier successNotifier() {
         return (config, event, attemptNumber) -> {
             PushDeliveryAttempt out = new PushDeliveryAttempt();
@@ -124,6 +155,21 @@ class InMemoryPushNotificationConfigServiceTest {
             out.setStatusCode(200);
             return out;
         };
+    }
+
+    private CreatePushNotificationConfigRequest createConfig(String id, String taskId) {
+        CreatePushNotificationConfigRequest create = new CreatePushNotificationConfigRequest();
+        create.setId(id);
+        create.setTaskId(taskId);
+        create.setEndpointUrl("https://hooks.example/" + id);
+        return create;
+    }
+
+    private GetPushNotificationConfigRequest configRequest(String configId, String taskId) {
+        GetPushNotificationConfigRequest request = new GetPushNotificationConfigRequest();
+        request.setConfigId(configId);
+        request.setTaskId(taskId);
+        return request;
     }
 
     private TaskEvent event(String taskId) {

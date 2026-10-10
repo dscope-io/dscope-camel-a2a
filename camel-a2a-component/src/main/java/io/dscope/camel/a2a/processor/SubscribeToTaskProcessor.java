@@ -4,11 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
-import io.dscope.camel.a2a.model.TaskSubscription;
+import io.dscope.camel.a2a.model.TaskEvent;
+import io.dscope.camel.a2a.model.TaskState;
+import io.dscope.camel.a2a.model.TaskStatus;
+import io.dscope.camel.a2a.model.TaskStatusUpdateEvent;
 import io.dscope.camel.a2a.model.dto.SubscribeToTaskRequest;
-import io.dscope.camel.a2a.model.dto.SubscribeToTaskResponse;
 import io.dscope.camel.a2a.service.A2ATaskService;
 import io.dscope.camel.a2a.service.InMemoryTaskEventService;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handles SubscribeToTask method invocation.
@@ -39,21 +44,32 @@ public class SubscribeToTaskProcessor implements Processor {
             throw new A2AInvalidParamsException("SubscribeToTask limit must be greater than zero");
         }
 
-        taskService.getTask(request.getTaskId());
+        var task = taskService.getTask(request.getTaskId());
+        TaskState state = task.getStatus() == null ? null : task.getStatus().getState();
+        if (state == TaskState.COMPLETED || state == TaskState.FAILED
+            || state == TaskState.CANCELED || state == TaskState.REJECTED) {
+            throw new A2AUnsupportedOperationException("Cannot subscribe to a task in a terminal state");
+        }
         long afterSequence = request.getAfterSequence() == null ? 0L : Math.max(0L, request.getAfterSequence());
-        TaskSubscription subscription = eventService.createSubscription(request.getTaskId(), afterSequence);
-
-        SubscribeToTaskResponse response = new SubscribeToTaskResponse();
-        response.setSubscriptionId(subscription.getSubscriptionId());
-        response.setTaskId(request.getTaskId());
-        response.setAfterSequence(afterSequence);
-        response.setTerminal(eventService.isTaskTerminal(request.getTaskId()));
-        response.setStreamUrl(buildStreamUrl(request.getTaskId(), subscription.getSubscriptionId(), afterSequence, request.getLimit()));
-        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+        List<Map<String, Object>> streamResponses = eventService
+            .readTaskEvents(request.getTaskId(), afterSequence, request.getLimit() == null ? 100 : request.getLimit())
+            .stream()
+            .map(event -> Map.<String, Object>of("statusUpdate", toStatusUpdate(event, task.getContextId())))
+            .toList();
+        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, streamResponses);
     }
 
-    private String buildStreamUrl(String taskId, String subscriptionId, long afterSequence, Integer limit) {
-        String suffix = limit == null ? "" : "&limit=" + limit;
-        return "/a2a/sse/" + taskId + "?subscriptionId=" + subscriptionId + "&afterSequence=" + afterSequence + suffix;
+    private TaskStatusUpdateEvent toStatusUpdate(TaskEvent event, String contextId) {
+        TaskStatus status = new TaskStatus();
+        status.setState(event.getState());
+        status.setMessage(event.getMessage());
+        status.setUpdatedAt(event.getTimestamp());
+
+        TaskStatusUpdateEvent update = new TaskStatusUpdateEvent();
+        update.setTaskId(event.getTaskId());
+        update.setContextId(contextId);
+        update.setStatus(status);
+        update.setFinal(event.isTerminal());
+        return update;
     }
 }

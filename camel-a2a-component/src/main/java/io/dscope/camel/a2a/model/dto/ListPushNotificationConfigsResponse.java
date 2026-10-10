@@ -9,6 +9,7 @@ import io.dscope.camel.a2a.model.PushNotificationConfig;
 public class ListPushNotificationConfigsResponse {
 
     private List<PushNotificationConfig> configs;
+    private String nextPageToken;
 
     public List<PushNotificationConfig> getConfigs() {
         return configs;
@@ -16,5 +17,13 @@ public class ListPushNotificationConfigsResponse {
 
     public void setConfigs(List<PushNotificationConfig> configs) {
         this.configs = configs;
+    }
+
+    public String getNextPageToken() {
+        return nextPageToken;
+    }
+
+    public void setNextPageToken(String nextPageToken) {
+        this.nextPageToken = nextPageToken;
     }
 }

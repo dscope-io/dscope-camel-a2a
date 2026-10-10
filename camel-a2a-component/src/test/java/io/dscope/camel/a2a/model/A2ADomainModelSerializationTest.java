@@ -37,12 +37,19 @@ class A2ADomainModelSerializationTest {
         task.setUpdatedAt("2026-02-08T00:10:00Z");
 
         String json = codec.serialize(task);
+        com.fasterxml.jackson.databind.JsonNode wireTask =
+            new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+        assertTrue(wireTask.has("id"));
+        assertFalse(wireTask.has("taskId"));
+        assertEquals("TASK_STATE_WORKING", wireTask.path("status").path("state").asText());
+        assertTrue(wireTask.path("history").isArray());
+        assertEquals("ROLE_AGENT", wireTask.path("history").get(0).path("role").asText());
         Task restored = codec.deserialize(json, Task.class);
 
         assertEquals("task-1", restored.getTaskId());
         assertEquals(TaskState.RUNNING, restored.getStatus().getState());
-        assertEquals("assistant", restored.getLatestMessage().getRole());
-        assertEquals("text", restored.getLatestMessage().getParts().get(0).getType());
+        assertEquals("assistant", restored.getMessages().get(0).getRole());
+        assertEquals("text", restored.getMessages().get(0).getParts().get(0).getType());
         assertEquals("artifact-1", restored.getArtifacts().get(0).getArtifactId());
         assertEquals("high", restored.getMetadata().get("priority"));
     }
@@ -66,6 +73,11 @@ class A2ADomainModelSerializationTest {
         card.setName("Assistant Agent");
         card.setDescription("Handles task-oriented requests");
         card.setEndpointUrl("https://example.org/a2a");
+        AgentInterface agentInterface = new AgentInterface();
+        agentInterface.setUrl("https://example.org/a2a");
+        agentInterface.setProtocolBinding("JSONRPC");
+        agentInterface.setProtocolVersion("1.0");
+        card.setSupportedInterfaces(List.of(agentInterface));
         card.setVersion("0.5.0");
         card.setCapabilities(capabilities);
         card.setSecuritySchemes(Map.of("bearerAuth", bearer));
@@ -76,11 +88,11 @@ class A2ADomainModelSerializationTest {
         String json = codec.serialize(card);
         AgentCard restored = codec.deserialize(json, AgentCard.class);
 
-        assertEquals("assistant-agent", restored.getAgentId());
+        assertEquals("https://example.org/a2a", restored.getSupportedInterfaces().get(0).getUrl());
         assertTrue(restored.getCapabilities().isStreaming());
         assertTrue(restored.getCapabilities().isPushNotifications());
         assertEquals("bearer", restored.getSecuritySchemes().get("bearerAuth").getScheme());
-        assertEquals("dscope", restored.getMetadata().get("team"));
+        assertFalse(codec.deserialize(json, com.fasterxml.jackson.databind.JsonNode.class).has("metadata"));
     }
 
     @Test

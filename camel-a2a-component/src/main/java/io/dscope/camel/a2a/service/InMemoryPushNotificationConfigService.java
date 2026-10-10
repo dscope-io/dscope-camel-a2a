@@ -59,8 +59,11 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
 
         String now = Instant.now().toString();
         PushNotificationConfig config = new PushNotificationConfig();
-        config.setConfigId(UUID.randomUUID().toString());
+        config.setConfigId(request.getId() == null || request.getId().isBlank()
+            ? UUID.randomUUID().toString() : request.getId());
         config.setTaskId(normalizeBlank(request.getTaskId()));
+        config.setToken(request.getToken());
+        config.setAuthentication(request.getAuthentication());
         config.setEndpointUrl(request.getEndpointUrl());
         config.setSecret(request.getSecret());
         config.setHeaders(request.getHeaders());
@@ -84,12 +87,16 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
         if (config == null) {
             throw new A2AInvalidParamsException("Push config not found: " + request.getConfigId());
         }
+        if (request.getTaskId() != null && !request.getTaskId().equals(config.getTaskId())) {
+            throw new A2AInvalidParamsException("Push config not found: " + request.getConfigId());
+        }
         return copyConfig(config);
     }
 
     @Override
     public List<PushNotificationConfig> list(ListPushNotificationConfigsRequest request) {
         int limit = 100;
+        int offset = 0;
         String taskId = null;
         if (request != null) {
             if (request.getLimit() != null) {
@@ -99,11 +106,20 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
                 limit = request.getLimit();
             }
             taskId = normalizeBlank(request.getTaskId());
+            offset = parsePageToken(request.getPageToken());
         }
         String finalTaskId = taskId;
-        return configsById.values().stream()
+        List<PushNotificationConfig> matchingConfigs = configsById.values().stream()
             .filter(c -> finalTaskId == null || finalTaskId.equals(c.getTaskId()))
-            .sorted(Comparator.comparing(PushNotificationConfig::getCreatedAt))
+            .sorted(Comparator.comparing(PushNotificationConfig::getCreatedAt,
+                Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(PushNotificationConfig::getConfigId, Comparator.nullsFirst(Comparator.naturalOrder())))
+            .collect(Collectors.toList());
+        if (offset > matchingConfigs.size()) {
+            throw new A2AInvalidParamsException("ListPushNotificationConfigs pageToken is out of range");
+        }
+        return matchingConfigs.stream()
+            .skip(offset)
             .limit(limit)
             .map(this::copyConfig)
             .collect(Collectors.toList());
@@ -114,7 +130,11 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
         if (request == null || request.getConfigId() == null || request.getConfigId().isBlank()) {
             throw new A2AInvalidParamsException("DeletePushNotificationConfig requires configId");
         }
-        return configsById.remove(request.getConfigId()) != null;
+        PushNotificationConfig config = configsById.get(request.getConfigId());
+        if (config == null || (request.getTaskId() != null && !request.getTaskId().equals(config.getTaskId()))) {
+            return false;
+        }
+        return configsById.remove(request.getConfigId(), config);
     }
 
     @Override
@@ -197,10 +217,27 @@ public class InMemoryPushNotificationConfigService implements A2APushNotificatio
         return value;
     }
 
+    private int parsePageToken(String pageToken) {
+        if (pageToken == null || pageToken.isBlank()) {
+            return 0;
+        }
+        try {
+            int offset = Integer.parseInt(pageToken);
+            if (offset < 0) {
+                throw new NumberFormatException();
+            }
+            return offset;
+        } catch (NumberFormatException e) {
+            throw new A2AInvalidParamsException("ListPushNotificationConfigs pageToken is invalid");
+        }
+    }
+
     private PushNotificationConfig copyConfig(PushNotificationConfig source) {
         PushNotificationConfig copy = new PushNotificationConfig();
         copy.setConfigId(source.getConfigId());
         copy.setTaskId(source.getTaskId());
+        copy.setToken(source.getToken());
+        copy.setAuthentication(source.getAuthentication());
         copy.setEndpointUrl(source.getEndpointUrl());
         copy.setSecret(source.getSecret());
         copy.setEnabled(source.isEnabled());

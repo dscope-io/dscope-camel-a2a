@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dscope.camel.a2a.config.A2AProtocolMethods;
 import io.dscope.camel.a2a.model.AgentCapabilities;
 import io.dscope.camel.a2a.model.AgentCard;
+import io.dscope.camel.a2a.model.AgentInterface;
 import io.dscope.camel.a2a.model.AgentSecurityScheme;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -116,6 +117,7 @@ public class DefaultAgentCardCatalog implements AgentCardCatalog {
         capabilities.setStreaming(true);
         capabilities.setPushNotifications(true);
         capabilities.setStatefulTasks(true);
+        capabilities.setExtendedAgentCard(true);
         capabilities.setSupportedMethods(List.copyOf(new TreeSet<>(A2AProtocolMethods.CORE_METHODS)));
 
         AgentSecurityScheme bearer = new AgentSecurityScheme();
@@ -130,6 +132,11 @@ public class DefaultAgentCardCatalog implements AgentCardCatalog {
         card.setDescription(description);
         card.setEndpointUrl(endpointUrl);
         card.setVersion("0.5.0");
+        AgentInterface protocolInterface = new AgentInterface();
+        protocolInterface.setUrl(endpointUrl);
+        protocolInterface.setProtocolBinding("JSONRPC");
+        protocolInterface.setProtocolVersion("1.0");
+        card.setSupportedInterfaces(List.of(protocolInterface));
         card.setCapabilities(capabilities);
         card.setSecuritySchemes(Map.of("bearerAuth", bearer));
         card.setDefaultInputModes(List.of("application/json", "text/plain"));

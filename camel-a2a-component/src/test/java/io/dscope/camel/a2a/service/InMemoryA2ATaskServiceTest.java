@@ -104,6 +104,26 @@ class InMemoryA2ATaskServiceTest {
     }
 
     @Test
+    void listTasksFiltersUsingProtocolStates() {
+        InMemoryA2ATaskService service = new InMemoryA2ATaskService();
+        Task waiting = service.sendMessage(sendMessageRequest("m-waiting", "r-waiting"));
+        service.transitionTask(waiting.getTaskId(), TaskState.WAITING, "input required");
+
+        ListTasksRequest inputRequired = new ListTasksRequest();
+        inputRequired.setState("TASK_STATE_INPUT_REQUIRED");
+        assertTrue(service.listTasks(inputRequired).stream().anyMatch(t -> t.getTaskId().equals(waiting.getTaskId())));
+
+        ListTasksRequest authRequired = new ListTasksRequest();
+        authRequired.setState("TASK_STATE_AUTH_REQUIRED");
+        assertTrue(service.listTasks(authRequired).isEmpty());
+
+        assertTrue(TaskState.CREATED.matchesProtocolValue("TASK_STATE_SUBMITTED"));
+        assertTrue(TaskState.QUEUED.matchesProtocolValue("TASK_STATE_SUBMITTED"));
+        assertFalse(TaskState.WAITING.matchesProtocolValue("TASK_STATE_AUTH_REQUIRED"));
+        assertTrue(TaskState.AUTH_REQUIRED.matchesProtocolValue("TASK_STATE_AUTH_REQUIRED"));
+    }
+
+    @Test
     void concurrentIdempotentSendMessageReturnsSingleTaskId() throws Exception {
         InMemoryA2ATaskService service = new InMemoryA2ATaskService();
         ExecutorService pool = Executors.newFixedThreadPool(8);

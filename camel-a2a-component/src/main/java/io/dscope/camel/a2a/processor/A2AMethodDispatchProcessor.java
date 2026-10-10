@@ -5,8 +5,9 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.config.A2AProtocolDefaults;
-
+import io.dscope.camel.a2a.config.A2AProtocolMethods;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -45,11 +46,29 @@ public class A2AMethodDispatchProcessor implements Processor {
         Object id = exchange.getProperty(A2AExchangeProperties.REQUEST_ID);
         Object result = exchange.getProperty(A2AExchangeProperties.METHOD_RESULT);
 
+        if (A2AProtocolMethods.SEND_STREAMING_MESSAGE.equals(method)
+            || A2AProtocolMethods.SUBSCRIBE_TO_TASK.equals(method)) {
+            if (!(result instanceof List<?> streamResponses)) {
+                throw new IllegalStateException("A2A stream response requires a list of stream events");
+            }
+            StringBuilder streamBody = new StringBuilder();
+            for (Object streamResponse : streamResponses) {
+                Map<String, Object> streamEnvelope = new LinkedHashMap<>();
+                streamEnvelope.put("jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION);
+                streamEnvelope.put("result", streamResponse);
+                streamEnvelope.put("id", id);
+                streamBody.append("data: ").append(mapper.writeValueAsString(streamEnvelope)).append("\n\n");
+            }
+            exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "text/event-stream");
+            exchange.getMessage().setBody(streamBody.toString());
+            return;
+        }
+
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION);
         envelope.put("result", result);
         envelope.put("id", id);
-        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, A2AProtocolDefaults.JSON_CONTENT_TYPE);
         exchange.getMessage().setBody(mapper.writeValueAsString(envelope));
     }
 }

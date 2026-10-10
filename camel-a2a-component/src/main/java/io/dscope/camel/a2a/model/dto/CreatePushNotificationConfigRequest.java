@@ -1,5 +1,7 @@
 package io.dscope.camel.a2a.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
@@ -15,6 +17,10 @@ public class CreatePushNotificationConfigRequest {
     private Long retryBackoffMs;
     private Map<String, String> headers;
     private Map<String, Object> metadata;
+    private String id;
+    private String token;
+    private Map<String, Object> authentication;
+    private String tenant;
 
     public String getTaskId() {
         return taskId;
@@ -24,12 +30,47 @@ public class CreatePushNotificationConfigRequest {
         this.taskId = taskId;
     }
 
+    @JsonProperty("url")
+    @JsonAlias("endpointUrl")
     public String getEndpointUrl() {
         return endpointUrl;
     }
 
+    @JsonProperty("url")
     public void setEndpointUrl(String endpointUrl) {
         this.endpointUrl = endpointUrl;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public Map<String, Object> getAuthentication() {
+        return authentication;
+    }
+
+    public void setAuthentication(Map<String, Object> authentication) {
+        this.authentication = authentication;
+    }
+
+    public String getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(String tenant) {
+        this.tenant = tenant;
     }
 
     public String getSecret() {

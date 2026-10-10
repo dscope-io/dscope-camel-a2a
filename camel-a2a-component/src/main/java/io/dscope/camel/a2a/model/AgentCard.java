@@ -1,5 +1,6 @@
 package io.dscope.camel.a2a.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Map;
 
@@ -13,16 +14,19 @@ public class AgentCard {
     private String description;
     private String endpointUrl;
     private String version;
+    private List<AgentInterface> supportedInterfaces;
     private AgentCapabilities capabilities;
     private Map<String, AgentSecurityScheme> securitySchemes;
     private List<String> defaultInputModes;
     private List<String> defaultOutputModes;
     private Map<String, Object> metadata;
 
+    @JsonIgnore
     public String getAgentId() {
         return agentId;
     }
 
+    @JsonIgnore
     public void setAgentId(String agentId) {
         this.agentId = agentId;
     }
@@ -43,12 +47,22 @@ public class AgentCard {
         this.description = description;
     }
 
+    @JsonIgnore
     public String getEndpointUrl() {
         return endpointUrl;
     }
 
+    @JsonIgnore
     public void setEndpointUrl(String endpointUrl) {
         this.endpointUrl = endpointUrl;
+    }
+
+    public List<AgentInterface> getSupportedInterfaces() {
+        return supportedInterfaces;
+    }
+
+    public void setSupportedInterfaces(List<AgentInterface> supportedInterfaces) {
+        this.supportedInterfaces = supportedInterfaces;
     }
 
     public String getVersion() {
@@ -91,10 +105,12 @@ public class AgentCard {
         this.defaultOutputModes = defaultOutputModes;
     }
 
+    @JsonIgnore
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    @JsonIgnore
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }

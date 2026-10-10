@@ -6,6 +6,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.JsonRpcError;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
+import io.dscope.camel.a2a.config.A2AProtocolDefaults;
 
 /**
  * Builds JSON-RPC 2.0 error envelopes from exchange failures.
@@ -29,7 +30,7 @@ public class A2AErrorProcessor implements Processor {
         String message = resolveMessage(error, errorCode);
         String responseBody = JsonRpcError.envelope(requestId, errorCode, message, true);
 
-        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, A2AProtocolDefaults.JSON_CONTENT_TYPE);
         exchange.getMessage().setBody(responseBody);
     }
 
@@ -37,7 +38,17 @@ public class A2AErrorProcessor implements Processor {
         if (error instanceof A2AMethodNotFoundException || error instanceof NoSuchMethodException) {
             return -32601;
         }
+        if (error instanceof A2AIllegalTaskStateException) {
+            return -32002;
+        }
+        if (error instanceof A2AUnsupportedOperationException) {
+            return -32004;
+        }
         if (error instanceof A2AInvalidParamsException) {
+            if (error.getMessage() != null && (error.getMessage().startsWith("Task not found:")
+                || error.getMessage().startsWith("Push config not found:"))) {
+                return -32001;
+            }
             return -32602;
         }
         if (error instanceof A2AJsonRpcValidationException || error instanceof IllegalArgumentException) {

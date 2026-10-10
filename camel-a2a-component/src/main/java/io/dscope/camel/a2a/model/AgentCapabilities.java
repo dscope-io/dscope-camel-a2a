@@ -1,5 +1,6 @@
 package io.dscope.camel.a2a.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
 /**
@@ -11,6 +12,7 @@ public class AgentCapabilities {
     private boolean pushNotifications;
     private boolean statefulTasks;
     private List<String> supportedMethods;
+    private boolean extendedAgentCard;
 
     public boolean isStreaming() {
         return streaming;
@@ -28,19 +30,31 @@ public class AgentCapabilities {
         this.pushNotifications = pushNotifications;
     }
 
+    @JsonIgnore
     public boolean isStatefulTasks() {
         return statefulTasks;
     }
 
+    @JsonIgnore
     public void setStatefulTasks(boolean statefulTasks) {
         this.statefulTasks = statefulTasks;
     }
 
+    @JsonIgnore
     public List<String> getSupportedMethods() {
         return supportedMethods;
     }
 
+    @JsonIgnore
     public void setSupportedMethods(List<String> supportedMethods) {
         this.supportedMethods = supportedMethods;
+    }
+
+    public boolean isExtendedAgentCard() {
+        return extendedAgentCard;
+    }
+
+    public void setExtendedAgentCard(boolean extendedAgentCard) {
+        this.extendedAgentCard = extendedAgentCard;
     }
 }

@@ -39,9 +39,10 @@ class AgentCardDiscoveryProcessorTest {
         processor.process(exchange);
 
         JsonNode card = mapper.readTree(exchange.getMessage().getBody(String.class));
-        assertEquals("agent-discovery", card.get("agentId").asText());
+        assertEquals("http://localhost:8081/a2a/rpc",
+            card.get("supportedInterfaces").get(0).get("url").asText());
         assertTrue(card.get("capabilities").get("streaming").asBoolean());
-        assertEquals("application/json", exchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
+        assertEquals("application/a2a+json", exchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
     }
 
     @Test

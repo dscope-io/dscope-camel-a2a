@@ -80,6 +80,10 @@ public class PersistentA2ATaskService implements A2ATaskService {
 
             String now = Instant.now().toString();
             String taskId = UUID.randomUUID().toString();
+            String contextId = message.getContextId() == null || message.getContextId().isBlank()
+                ? UUID.randomUUID().toString() : message.getContextId();
+            message.setContextId(contextId);
+            message.setTaskId(taskId);
 
             TaskStatus status = new TaskStatus();
             status.setState(TaskState.CREATED);
@@ -88,6 +92,7 @@ public class PersistentA2ATaskService implements A2ATaskService {
 
             Task task = new Task();
             task.setTaskId(taskId);
+            task.setContextId(contextId);
             task.setStatus(status);
             task.setLatestMessage(message);
             task.setMessages(List.of(message));
@@ -131,10 +136,9 @@ public class PersistentA2ATaskService implements A2ATaskService {
 
         List<Task> current = new ArrayList<>(tasks.values());
         if (request != null && request.getState() != null && !request.getState().isBlank()) {
-            String expectedState = request.getState().toUpperCase();
             current = current.stream()
                 .filter(t -> t.getStatus() != null && t.getStatus().getState() != null)
-                .filter(t -> t.getStatus().getState().name().equals(expectedState))
+                .filter(t -> t.getStatus().getState().matchesProtocolValue(request.getState()))
                 .collect(Collectors.toList());
         }
         if (request != null && request.getLimit() != null && request.getLimit() > 0 && current.size() > request.getLimit()) {

@@ -20,7 +20,7 @@ public class A2AConfiguration {
     private String serverUrl = "ws://0.0.0.0:8081/a2a";
 
     @UriParam
-    private String protocolVersion = "a2a/2025-06-18";
+    private String protocolVersion = A2AProtocolDefaults.PROTOCOL_VERSION;
 
     @UriParam
     private boolean sendToAll;

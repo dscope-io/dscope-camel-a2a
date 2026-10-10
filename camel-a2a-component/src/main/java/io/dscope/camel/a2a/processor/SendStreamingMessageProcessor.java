@@ -6,12 +6,16 @@ import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.Task;
 import io.dscope.camel.a2a.model.TaskState;
-import io.dscope.camel.a2a.model.TaskSubscription;
+import io.dscope.camel.a2a.model.TaskEvent;
+import io.dscope.camel.a2a.model.TaskStatus;
+import io.dscope.camel.a2a.model.TaskStatusUpdateEvent;
 import io.dscope.camel.a2a.model.dto.SendMessageRequest;
 import io.dscope.camel.a2a.model.dto.SendStreamingMessageRequest;
-import io.dscope.camel.a2a.model.dto.SendStreamingMessageResponse;
 import io.dscope.camel.a2a.service.A2ATaskService;
 import io.dscope.camel.a2a.service.InMemoryTaskEventService;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handles SendStreamingMessage method invocation.
@@ -43,22 +47,32 @@ public class SendStreamingMessageProcessor implements Processor {
         sendRequest.setConversationId(request.getConversationId());
         sendRequest.setIdempotencyKey(request.getIdempotencyKey());
         sendRequest.setMetadata(request.getMetadata());
+        sendRequest.setConfiguration(request.getConfiguration());
+        sendRequest.setTenant(request.getTenant());
 
         Task task = taskService.sendMessage(sendRequest);
         taskService.transitionTask(task.getTaskId(), TaskState.WAITING, "Streaming updates started");
         taskService.transitionTask(task.getTaskId(), TaskState.RUNNING, "Streaming updates in progress");
         taskService.transitionTask(task.getTaskId(), TaskState.COMPLETED, "Streaming updates completed");
         task = taskService.getTask(task.getTaskId());
-
-        TaskSubscription subscription = eventService.createSubscription(task.getTaskId(), 0L);
-        SendStreamingMessageResponse response = new SendStreamingMessageResponse();
-        response.setTask(task);
-        response.setSubscriptionId(subscription.getSubscriptionId());
-        response.setStreamUrl(buildStreamUrl(task.getTaskId(), subscription.getSubscriptionId(), 0L));
-        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+        String contextId = task.getContextId();
+        List<Map<String, Object>> streamResponses = eventService.readTaskEvents(task.getTaskId(), 0L, 100).stream()
+            .map(event -> Map.<String, Object>of("statusUpdate", toStatusUpdate(event, contextId)))
+            .toList();
+        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, streamResponses);
     }
 
-    private String buildStreamUrl(String taskId, String subscriptionId, long afterSequence) {
-        return "/a2a/sse/" + taskId + "?subscriptionId=" + subscriptionId + "&afterSequence=" + afterSequence;
+    private TaskStatusUpdateEvent toStatusUpdate(TaskEvent event, String contextId) {
+        TaskStatus status = new TaskStatus();
+        status.setState(event.getState());
+        status.setMessage(event.getMessage());
+        status.setUpdatedAt(event.getTimestamp());
+
+        TaskStatusUpdateEvent update = new TaskStatusUpdateEvent();
+        update.setTaskId(event.getTaskId());
+        update.setContextId(contextId);
+        update.setStatus(status);
+        update.setFinal(event.isTerminal());
+        return update;
     }
 }

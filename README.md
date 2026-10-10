@@ -6,6 +6,8 @@
 
 Apache Camel component and sample runtime for Agent-to-Agent (A2A) protocol workflows.
 
+The protocol compatibility target is A2A `1.0.1`.
+
 Current release baseline:
 
 - Camel A2A version `1.1.0`
@@ -93,18 +95,17 @@ camel-a2a/
 
 | Method | Required Params | Notes |
 |---|---|---|
-| `SendMessage` | `message` | Creates task and returns `task` |
-| `SendStreamingMessage` | `message` | Creates task, drives streaming state updates, returns `subscriptionId` and `streamUrl` |
-| `GetTask` | `taskId` | Returns task snapshot |
-| `ListTasks` | none | Optional `limit`, `state`, `cursor` |
-| `CancelTask` | `taskId` | Optional `reason` |
-| `SubscribeToTask` | `taskId` | Optional `afterSequence`, `limit` |
-| `CreatePushNotificationConfig` | `endpointUrl` | Optional `taskId`, retry/backoff, headers, metadata |
-| `GetPushNotificationConfig` | `configId` | Fetches config by id |
-| `ListPushNotificationConfigs` | none | Optional `taskId`, `limit` |
-| `DeletePushNotificationConfig` | `configId` | Returns deletion status |
-| `GetExtendedAgentCard` | none | Optional `includeSignature` (default `true`) |
-| `intent/execute` | implementation-dependent | Legacy compatibility method constant |
+| `SendMessage` | `message` | Returns a Task |
+| `SendStreamingMessage` | `message` | Returns a task response over SSE |
+| `GetTask` | `id` | Returns task snapshot |
+| `ListTasks` | none | Optional `pageSize`, `status`, `pageToken` |
+| `CancelTask` | `id` | Returns the updated Task |
+| `SubscribeToTask` | `id` | Returns a task response over SSE |
+| `CreateTaskPushNotificationConfig` | `url`, `taskId` | Optional delivery retry/backoff configuration |
+| `GetTaskPushNotificationConfig` | `taskId`, `id` | Fetches a task's config |
+| `ListTaskPushNotificationConfigs` | `taskId` | Lists configs for a task |
+| `DeleteTaskPushNotificationConfig` | `taskId`, `id` | Deletes a task's config |
+| `GetExtendedAgentCard` | none | Returns the extended AgentCard |
 
 ## Quick Start
 
@@ -188,38 +189,38 @@ curl -s http://localhost:8080/diagnostics
 
 # SendMessage -> capture taskId
 SEND_RESPONSE=$(curl -s http://localhost:8080/a2a/rpc \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello"}]},"metadata":{"source":"curl"}},"id":"1"}')
+  -H 'Content-Type: application/a2a+json' \
+  -d '{"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"m1","role":"ROLE_USER","parts":[{"text":"hello"}]},"metadata":{"source":"curl"}},"id":"1"}')
 
 echo "$SEND_RESPONSE"
-TASK_ID=$(echo "$SEND_RESPONSE" | sed -n 's/.*"taskId":"\([^"]*\)".*/\1/p')
+TASK_ID=$(echo "$SEND_RESPONSE" | sed -n 's/.*"result":{"id":"\([^"]*\)".*/\1/p')
 
 # GetTask + ListTasks
 curl -s http://localhost:8080/a2a/rpc \
-  -H 'Content-Type: application/json' \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"GetTask\",\"params\":{\"taskId\":\"$TASK_ID\"},\"id\":\"2\"}"
+  -H 'Content-Type: application/a2a+json' \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"GetTask\",\"params\":{\"id\":\"$TASK_ID\"},\"id\":\"2\"}"
 
 curl -s http://localhost:8080/a2a/rpc \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","method":"ListTasks","params":{"limit":10},"id":"3"}'
+  -H 'Content-Type: application/a2a+json' \
+  -d '{"jsonrpc":"2.0","method":"ListTasks","params":{"pageSize":10},"id":"3"}'
 
 # Subscribe + SSE
 curl -s http://localhost:8080/a2a/rpc \
-  -H 'Content-Type: application/json' \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"SubscribeToTask\",\"params\":{\"taskId\":\"$TASK_ID\",\"afterSequence\":0,\"limit\":20},\"id\":\"4\"}"
+  -H 'Content-Type: application/a2a+json' \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"SubscribeToTask\",\"params\":{\"id\":\"$TASK_ID\"},\"id\":\"4\"}"
 
 curl -N "http://localhost:8080/a2a/sse/$TASK_ID?afterSequence=0&limit=100"
 
 # Cancel task
 curl -s http://localhost:8080/a2a/rpc \
-  -H 'Content-Type: application/json' \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"CancelTask\",\"params\":{\"taskId\":\"$TASK_ID\",\"reason\":\"manual stop\"},\"id\":\"5\"}"
+  -H 'Content-Type: application/a2a+json' \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"CancelTask\",\"params\":{\"id\":\"$TASK_ID\"},\"id\":\"5\"}"
 
 # Agent card endpoints
 curl -s http://localhost:8080/.well-known/agent-card.json
 curl -s http://localhost:8080/a2a/rpc \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","method":"GetExtendedAgentCard","params":{"includeSignature":true},"id":"6"}'
+  -H 'Content-Type: application/a2a+json' \
+  -d '{"jsonrpc":"2.0","method":"GetExtendedAgentCard","id":"6"}'
 ```
 
 ## Camel Component URI Options
@@ -235,7 +236,7 @@ a2a:agent[?options]
 | `agent` | String | - | Endpoint agent identifier |
 | `remoteUrl` | String | `ws://localhost:8081/a2a` | Remote target URL |
 | `serverUrl` | String | `ws://0.0.0.0:8081/a2a` | Local consumer bind URL |
-| `protocolVersion` | String | `a2a/2025-06-18` | Protocol version marker |
+| `protocolVersion` | String | `1.0` | A2A protocol version marker |
 | `sendToAll` | Boolean | `false` | Broadcast behavior |
 | `authToken` | String | - | Optional token |
 | `retryCount` | Integer | `3` | Send retry count |

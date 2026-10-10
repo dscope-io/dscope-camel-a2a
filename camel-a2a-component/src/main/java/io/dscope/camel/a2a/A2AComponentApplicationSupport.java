@@ -126,11 +126,15 @@ public class A2AComponentApplicationSupport {
         AgentCardSigner cardSigner = new NoopAgentCardSigner();
         AgentCardSignatureVerifier cardVerifier = new AllowAllAgentCardSignatureVerifier();
         AgentCardPolicyChecker cardPolicyChecker = new AllowAllAgentCardPolicyChecker();
+        String samplePort = System.getProperty(
+            "a2a.sample.port",
+            System.getenv().getOrDefault("A2A_SAMPLE_PORT", "8080")
+        );
         AgentCardCatalog agentCardCatalog = new DefaultAgentCardCatalog(
             "camel-a2a-agent",
             "Camel A2A Agent",
             "Apache Camel A2A compatibility service",
-            "http://localhost:8081/a2a/rpc",
+            "http://localhost:" + samplePort + "/a2a/rpc",
             cardSigner,
             cardVerifier,
             cardPolicyChecker
@@ -163,14 +167,19 @@ public class A2AComponentApplicationSupport {
         Map<String, Processor> methodMap = Map.ofEntries(
             Map.entry(A2AProtocolMethods.SEND_MESSAGE, sendMessageProcessor),
             Map.entry(A2AProtocolMethods.SEND_STREAMING_MESSAGE, sendStreamingMessageProcessor),
+            Map.entry(A2AProtocolMethods.LEGACY_INTENT_EXECUTE, new IntentRouterProcessor()),
             Map.entry(A2AProtocolMethods.GET_TASK, getTaskProcessor),
             Map.entry(A2AProtocolMethods.LIST_TASKS, listTasksProcessor),
             Map.entry(A2AProtocolMethods.CANCEL_TASK, cancelTaskProcessor),
             Map.entry(A2AProtocolMethods.SUBSCRIBE_TO_TASK, subscribeToTaskProcessor),
             Map.entry(A2AProtocolMethods.CREATE_PUSH_NOTIFICATION_CONFIG, createPushConfigProcessor),
+            Map.entry(A2AProtocolMethods.CREATE_TASK_PUSH_NOTIFICATION_CONFIG, createPushConfigProcessor),
             Map.entry(A2AProtocolMethods.GET_PUSH_NOTIFICATION_CONFIG, getPushConfigProcessor),
+            Map.entry(A2AProtocolMethods.GET_TASK_PUSH_NOTIFICATION_CONFIG, getPushConfigProcessor),
             Map.entry(A2AProtocolMethods.LIST_PUSH_NOTIFICATION_CONFIGS, listPushConfigsProcessor),
+            Map.entry(A2AProtocolMethods.LIST_TASK_PUSH_NOTIFICATION_CONFIGS, listPushConfigsProcessor),
             Map.entry(A2AProtocolMethods.DELETE_PUSH_NOTIFICATION_CONFIG, deletePushConfigProcessor),
+            Map.entry(A2AProtocolMethods.DELETE_TASK_PUSH_NOTIFICATION_CONFIG, deletePushConfigProcessor),
             Map.entry(A2AProtocolMethods.GET_EXTENDED_AGENT_CARD, getExtendedAgentCardProcessor)
         );
 
@@ -195,7 +204,7 @@ public class A2AComponentApplicationSupport {
         binder.bind(BEAN_GET_EXTENDED_AGENT_CARD_PROCESSOR, getExtendedAgentCardProcessor);
         binder.bind(BEAN_AGENT_CARD_DISCOVERY_PROCESSOR, agentCardDiscoveryProcessor);
         binder.bind(BEAN_DIAGNOSTICS_PROCESSOR, diagnosticsProcessor);
-        binder.bind(BEAN_ENVELOPE_PROCESSOR, new A2AJsonRpcEnvelopeProcessor(A2AProtocolMethods.CORE_METHODS));
+        binder.bind(BEAN_ENVELOPE_PROCESSOR, new A2AJsonRpcEnvelopeProcessor(A2AProtocolMethods.SUPPORTED_METHODS));
         binder.bind(BEAN_ERROR_PROCESSOR, new A2AErrorProcessor());
         binder.bind(BEAN_METHOD_PROCESSOR, new A2AMethodDispatchProcessor(methodMap));
         binder.bind(BEAN_LEGACY_METHOD_PROCESSOR, new IntentRouterProcessor());

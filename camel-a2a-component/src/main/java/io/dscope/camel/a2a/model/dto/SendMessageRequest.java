@@ -12,6 +12,8 @@ public class SendMessageRequest {
     private String conversationId;
     private String idempotencyKey;
     private Map<String, Object> metadata;
+    private Map<String, Object> configuration;
+    private String tenant;
 
     public Message getMessage() {
         return message;
@@ -43,5 +45,21 @@ public class SendMessageRequest {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public Map<String, Object> getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Map<String, Object> configuration) {
+        this.configuration = configuration;
+    }
+
+    public String getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(String tenant) {
+        this.tenant = tenant;
     }
 }
