@@ -69,6 +69,7 @@ public class SubscribeToTaskProcessor implements Processor {
         update.setTaskId(event.getTaskId());
         update.setContextId(contextId);
         update.setStatus(status);
+        update.setFinal(event.isTerminal());
         return update;
     }
 }

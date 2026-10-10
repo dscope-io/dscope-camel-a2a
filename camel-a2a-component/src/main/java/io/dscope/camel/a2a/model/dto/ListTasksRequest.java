@@ -46,17 +46,7 @@ public class ListTasksRequest {
 
     @JsonProperty("status")
     public void setState(String state) {
-        if (state == null) {
-            this.state = null;
-        } else {
-            String normalized = state.startsWith("TASK_STATE_") ? state.substring("TASK_STATE_".length()) : state;
-            this.state = switch (normalized) {
-                case "SUBMITTED" -> "CREATED";
-                case "WORKING" -> "RUNNING";
-                case "INPUT_REQUIRED", "AUTH_REQUIRED" -> "WAITING";
-                default -> normalized;
-            };
-        }
+        this.state = state;
     }
 
     public String getContextId() {

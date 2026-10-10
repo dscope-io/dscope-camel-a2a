@@ -167,6 +167,7 @@ public class A2AComponentApplicationSupport {
         Map<String, Processor> methodMap = Map.ofEntries(
             Map.entry(A2AProtocolMethods.SEND_MESSAGE, sendMessageProcessor),
             Map.entry(A2AProtocolMethods.SEND_STREAMING_MESSAGE, sendStreamingMessageProcessor),
+            Map.entry(A2AProtocolMethods.LEGACY_INTENT_EXECUTE, new IntentRouterProcessor()),
             Map.entry(A2AProtocolMethods.GET_TASK, getTaskProcessor),
             Map.entry(A2AProtocolMethods.LIST_TASKS, listTasksProcessor),
             Map.entry(A2AProtocolMethods.CANCEL_TASK, cancelTaskProcessor),

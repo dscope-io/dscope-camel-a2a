@@ -53,11 +53,10 @@ public class A2AMethodDispatchProcessor implements Processor {
             }
             StringBuilder streamBody = new StringBuilder();
             for (Object streamResponse : streamResponses) {
-                Map<String, Object> streamEnvelope = Map.of(
-                    "jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION,
-                    "result", streamResponse,
-                    "id", id == null ? "" : id
-                );
+                Map<String, Object> streamEnvelope = new LinkedHashMap<>();
+                streamEnvelope.put("jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION);
+                streamEnvelope.put("result", streamResponse);
+                streamEnvelope.put("id", id);
                 streamBody.append("data: ").append(mapper.writeValueAsString(streamEnvelope)).append("\n\n");
             }
             exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "text/event-stream");

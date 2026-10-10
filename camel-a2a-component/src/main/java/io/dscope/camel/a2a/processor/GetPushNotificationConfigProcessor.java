@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
+import io.dscope.camel.a2a.config.A2AProtocolMethods;
 import io.dscope.camel.a2a.model.PushNotificationConfig;
 import io.dscope.camel.a2a.model.dto.GetPushNotificationConfigRequest;
 import io.dscope.camel.a2a.service.A2APushNotificationConfigService;
@@ -27,6 +28,14 @@ public class GetPushNotificationConfigProcessor implements Processor {
             throw new A2AInvalidParamsException("GetPushNotificationConfig requires params object");
         }
         GetPushNotificationConfigRequest request = mapper.convertValue(params, GetPushNotificationConfigRequest.class);
+        if (A2AProtocolMethods.GET_TASK_PUSH_NOTIFICATION_CONFIG.equals(
+            exchange.getProperty(A2AExchangeProperties.METHOD, String.class))) {
+            if (request.getTaskId() == null || request.getTaskId().isBlank()) {
+                throw new A2AInvalidParamsException("GetTaskPushNotificationConfig requires taskId");
+            }
+        } else {
+            request.setTaskId(null);
+        }
         PushNotificationConfig config = configService.get(request);
 
         exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, config);

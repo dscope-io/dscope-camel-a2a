@@ -13,6 +13,7 @@ import io.dscope.camel.a2a.service.A2ATaskService;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -45,6 +46,7 @@ public class ListTasksProcessor implements Processor {
         query.setState(request.getState());
         query.setContextId(request.getContextId());
         List<Task> matchingTasks = taskService.listTasks(query).stream()
+            .sorted(Comparator.comparing(Task::getTaskId, Comparator.nullsFirst(Comparator.naturalOrder())))
             .filter(task -> request.getContextId() == null || request.getContextId().equals(task.getContextId()))
             .filter(task -> matchesStatusTimestamp(task, timestampAfter))
             .toList();
@@ -94,7 +96,7 @@ public class ListTasksProcessor implements Processor {
             return true;
         }
         return task.getStatus() != null && task.getStatus().getUpdatedAt() != null
-            && !Instant.parse(task.getStatus().getUpdatedAt()).isBefore(timestampAfter);
+            && Instant.parse(task.getStatus().getUpdatedAt()).isAfter(timestampAfter);
     }
 
     private Task projectTask(Task task, ListTasksRequest request) {

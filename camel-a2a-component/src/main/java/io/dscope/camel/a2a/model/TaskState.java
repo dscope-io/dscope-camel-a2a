@@ -32,6 +32,18 @@ public enum TaskState {
         };
     }
 
+    public boolean matchesProtocolValue(String value) {
+        if (value == null) {
+            return false;
+        }
+        String normalized = value.toUpperCase();
+        if (normalized.startsWith("TASK_STATE_")) {
+            normalized = normalized.substring("TASK_STATE_".length());
+        }
+        return name().equals(normalized)
+            || toProtocolValue().substring("TASK_STATE_".length()).equals(normalized);
+    }
+
     @JsonCreator
     public static TaskState fromProtocolValue(String value) {
         if (value == null) {

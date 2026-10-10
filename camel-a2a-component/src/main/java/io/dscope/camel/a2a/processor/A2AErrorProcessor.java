@@ -45,7 +45,8 @@ public class A2AErrorProcessor implements Processor {
             return -32004;
         }
         if (error instanceof A2AInvalidParamsException) {
-            if (error.getMessage() != null && error.getMessage().startsWith("Task not found:")) {
+            if (error.getMessage() != null && (error.getMessage().startsWith("Task not found:")
+                || error.getMessage().startsWith("Push config not found:"))) {
                 return -32001;
             }
             return -32602;

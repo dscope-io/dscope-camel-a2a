@@ -19,8 +19,10 @@ import io.dscope.camel.a2a.service.InMemoryPushNotificationConfigService;
 import io.dscope.camel.a2a.service.InMemoryTaskEventService;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,6 +63,7 @@ class A2AMethodDispatchProcessorTest {
         dispatchProcessor = new A2AMethodDispatchProcessor(Map.ofEntries(
             Map.entry(A2AProtocolMethods.SEND_MESSAGE, new SendMessageProcessor(taskService)),
             Map.entry(A2AProtocolMethods.SEND_STREAMING_MESSAGE, new SendStreamingMessageProcessor(taskService, eventService)),
+            Map.entry(A2AProtocolMethods.LEGACY_INTENT_EXECUTE, new IntentRouterProcessor()),
             Map.entry(A2AProtocolMethods.GET_TASK, new GetTaskProcessor(taskService)),
             Map.entry(A2AProtocolMethods.LIST_TASKS, new ListTasksProcessor(taskService)),
             Map.entry(A2AProtocolMethods.CANCEL_TASK, new CancelTaskProcessor(taskService)),
@@ -125,6 +128,21 @@ class A2AMethodDispatchProcessorTest {
     }
 
     @Test
+    void legacyIntentExecuteIsDispatched() throws Exception {
+        JsonNode response = execute("""
+            {"jsonrpc":"2.0","method":"intent/execute","params":{"input":"legacy"},"id":"legacy-1"}
+            """);
+
+        assertTrue(response.path("result").path("handled").asBoolean());
+        assertEquals("intent/execute", response.path("result").path("method").asText());
+
+        JsonNode noParams = execute("""
+            {"jsonrpc":"2.0","method":"intent/execute","id":"legacy-no-params"}
+            """);
+        assertTrue(noParams.path("result").path("handled").asBoolean());
+    }
+
+    @Test
     void sendStreamingAndSubscribeReturnSseStatusUpdates() throws Exception {
         Exchange streamingExchange = executeExchange("""
             {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"stream-m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello stream"}]}},"id":"21"}
@@ -138,6 +156,14 @@ class A2AMethodDispatchProcessorTest {
         assertEquals("TASK_STATE_COMPLETED",
             streamingResponses.get(streamingResponses.size() - 1).path("result")
                 .path("statusUpdate").path("status").path("state").asText());
+        assertFalse(streamingResponses.get(0).path("result").path("statusUpdate").path("final").asBoolean());
+        assertTrue(streamingResponses.get(streamingResponses.size() - 1).path("result")
+            .path("statusUpdate").path("final").asBoolean());
+
+        List<JsonNode> nullIdResponses = readSseResponses(executeExchange("""
+            {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"stream-null-id","role":"user","parts":[{"text":"stream"}]}},"id":null}
+            """));
+        assertTrue(nullIdResponses.stream().allMatch(response -> response.has("id") && response.get("id").isNull()));
 
         JsonNode send = execute("""
             {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"subscribe-m1","role":"user","parts":[{"text":"still running"}]}},"id":"subscribe-send"}
@@ -150,6 +176,8 @@ class A2AMethodDispatchProcessorTest {
         assertEquals("text/event-stream", subscribeExchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
         assertEquals(activeTaskId, readSseResponse(subscribeExchange).path("result")
             .path("statusUpdate").path("taskId").asText());
+        assertFalse(readSseResponse(subscribeExchange).path("result")
+            .path("statusUpdate").path("final").asBoolean());
 
         JsonNode terminalSubscribe = execute("""
             {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"id":"%s"},"id":"23"}
@@ -171,6 +199,8 @@ class A2AMethodDispatchProcessorTest {
         assertEquals(1, firstResult.path("pageSize").asInt());
         assertEquals(1, firstResult.path("tasks").size());
         assertFalse(firstResult.path("nextPageToken").asText().isBlank());
+        assertEquals(firstTaskId.compareTo(secondTaskId) < 0 ? firstTaskId : secondTaskId,
+            firstResult.path("tasks").get(0).path("id").asText());
         assertEquals(contextId, firstResult.path("tasks").get(0).path("contextId").asText());
         assertEquals(0, firstResult.path("tasks").get(0).path("history").size());
 
@@ -183,6 +213,19 @@ class A2AMethodDispatchProcessorTest {
         assertNotEquals(firstResult.path("tasks").get(0).path("id").asText(),
             secondResult.path("tasks").get(0).path("id").asText());
         assertTrue(Set.of(firstTaskId, secondTaskId).contains(secondResult.path("tasks").get(0).path("id").asText()));
+
+        String firstBoundary = execute("""
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s"},"id":"page-boundary-first"}
+            """.formatted(firstTaskId)).path("result").path("status").path("timestamp").asText();
+        String secondBoundary = execute("""
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s"},"id":"page-boundary-task"}
+            """.formatted(secondTaskId)).path("result").path("status").path("timestamp").asText();
+        String boundary = Instant.parse(firstBoundary).isAfter(Instant.parse(secondBoundary))
+            ? firstBoundary : secondBoundary;
+        JsonNode afterBoundary = execute("""
+            {"jsonrpc":"2.0","method":"ListTasks","params":{"contextId":"%s","statusTimestampAfter":"%s"},"id":"page-boundary"}
+            """.formatted(contextId, boundary));
+        assertEquals(0, afterBoundary.path("result").path("totalSize").asInt());
     }
 
     @Test
@@ -209,6 +252,60 @@ class A2AMethodDispatchProcessorTest {
             {"jsonrpc":"2.0","method":"DeletePushNotificationConfig","params":{"configId":"%s"},"id":"34"}
             """.formatted(configId));
         assertTrue(delete.get("result").isObject());
+    }
+
+    @Test
+    void taskPushConfigMethodsEnforceOwnershipAndListPagination() throws Exception {
+        execute("""
+            {"jsonrpc":"2.0","method":"CreatePushNotificationConfig","params":{"taskId":"task-owner","id":"cfg-owner-1","endpointUrl":"https://example.test/one"},"id":"owner-create-1"}
+            """);
+        execute("""
+            {"jsonrpc":"2.0","method":"CreatePushNotificationConfig","params":{"taskId":"task-owner","id":"cfg-owner-2","endpointUrl":"https://example.test/two"},"id":"owner-create-2"}
+            """);
+
+        JsonNode firstPage = execute("""
+            {"jsonrpc":"2.0","method":"ListTaskPushNotificationConfigs","params":{"taskId":"task-owner","pageSize":1},"id":"owner-list-1"}
+            """).path("result");
+        assertEquals(1, firstPage.path("configs").size());
+        assertEquals("1", firstPage.path("nextPageToken").asText());
+        JsonNode secondPage = execute("""
+            {"jsonrpc":"2.0","method":"ListTaskPushNotificationConfigs","params":{"taskId":"task-owner","pageSize":1,"pageToken":"1"},"id":"owner-list-2"}
+            """).path("result");
+        assertEquals(1, secondPage.path("configs").size());
+        assertTrue(secondPage.path("nextPageToken").asText().isBlank());
+        assertNotEquals(firstPage.path("configs").get(0).path("id").asText(),
+            secondPage.path("configs").get(0).path("id").asText());
+
+        JsonNode mismatchedGet = execute("""
+            {"jsonrpc":"2.0","method":"GetTaskPushNotificationConfig","params":{"taskId":"other-task","id":"cfg-owner-1"},"id":"owner-get"}
+            """);
+        assertEquals(-32001, mismatchedGet.path("error").path("code").asInt());
+        JsonNode mismatchedDelete = execute("""
+            {"jsonrpc":"2.0","method":"DeleteTaskPushNotificationConfig","params":{"taskId":"other-task","id":"cfg-owner-1"},"id":"owner-delete"}
+            """);
+        assertEquals(-32001, mismatchedDelete.path("error").path("code").asInt());
+        assertEquals("cfg-owner-1", execute("""
+            {"jsonrpc":"2.0","method":"GetTaskPushNotificationConfig","params":{"taskId":"task-owner","id":"cfg-owner-1"},"id":"owner-get-valid"}
+            """).path("result").path("id").asText());
+    }
+
+    @Test
+    void getTaskProjectsHistoryAndRejectsNegativeLength() throws Exception {
+        String taskId = execute("""
+            {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"history-m1","role":"user","parts":[{"text":"history"}]}},"id":"history-send"}
+            """).path("result").path("id").asText();
+        JsonNode projected = execute("""
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s","historyLength":0},"id":"history-get"}
+            """.formatted(taskId));
+        assertEquals(0, projected.path("result").path("history").size());
+        assertEquals(1, execute("""
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s","historyLength":1},"id":"history-get-one"}
+            """.formatted(taskId)).path("result").path("history").size());
+
+        JsonNode invalid = execute("""
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s","historyLength":-1},"id":"history-invalid"}
+            """.formatted(taskId));
+        assertEquals(-32602, invalid.path("error").path("code").asInt());
     }
 
     @Test

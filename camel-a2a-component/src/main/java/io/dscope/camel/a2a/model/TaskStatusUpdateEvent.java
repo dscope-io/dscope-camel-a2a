@@ -11,6 +11,7 @@ public class TaskStatusUpdateEvent {
     private String taskId;
     private String contextId;
     private TaskStatus status;
+    private Boolean isFinal;
 
     public String getTaskId() {
         return taskId;
@@ -34,5 +35,15 @@ public class TaskStatusUpdateEvent {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("final")
+    public Boolean getFinal() {
+        return isFinal;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("final")
+    public void setFinal(Boolean isFinal) {
+        this.isFinal = isFinal;
     }
 }

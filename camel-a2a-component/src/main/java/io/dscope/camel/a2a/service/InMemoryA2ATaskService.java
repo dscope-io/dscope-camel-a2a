@@ -116,10 +116,9 @@ public class InMemoryA2ATaskService implements A2ATaskService {
     public List<Task> listTasks(ListTasksRequest request) {
         List<Task> current = new ArrayList<>(tasks.values());
         if (request != null && request.getState() != null && !request.getState().isBlank()) {
-            String expectedState = request.getState().toUpperCase();
             current = current.stream()
                 .filter(t -> t.getStatus() != null && t.getStatus().getState() != null)
-                .filter(t -> t.getStatus().getState().name().equals(expectedState))
+                .filter(t -> t.getStatus().getState().matchesProtocolValue(request.getState()))
                 .collect(Collectors.toList());
         }
         if (request != null && request.getLimit() != null && request.getLimit() > 0 && current.size() > request.getLimit()) {
