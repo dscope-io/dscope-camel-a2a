@@ -13,6 +13,10 @@ public final class A2AProtocolMethods {
     public static final String LIST_TASKS = "ListTasks";
     public static final String CANCEL_TASK = "CancelTask";
     public static final String SUBSCRIBE_TO_TASK = "SubscribeToTask";
+    public static final String CREATE_TASK_PUSH_NOTIFICATION_CONFIG = "CreateTaskPushNotificationConfig";
+    public static final String GET_TASK_PUSH_NOTIFICATION_CONFIG = "GetTaskPushNotificationConfig";
+    public static final String LIST_TASK_PUSH_NOTIFICATION_CONFIGS = "ListTaskPushNotificationConfigs";
+    public static final String DELETE_TASK_PUSH_NOTIFICATION_CONFIG = "DeleteTaskPushNotificationConfig";
     public static final String CREATE_PUSH_NOTIFICATION_CONFIG = "CreatePushNotificationConfig";
     public static final String GET_PUSH_NOTIFICATION_CONFIG = "GetPushNotificationConfig";
     public static final String LIST_PUSH_NOTIFICATION_CONFIGS = "ListPushNotificationConfigs";
@@ -27,6 +31,10 @@ public final class A2AProtocolMethods {
         LIST_TASKS,
         CANCEL_TASK,
         SUBSCRIBE_TO_TASK,
+        CREATE_TASK_PUSH_NOTIFICATION_CONFIG,
+        GET_TASK_PUSH_NOTIFICATION_CONFIG,
+        LIST_TASK_PUSH_NOTIFICATION_CONFIGS,
+        DELETE_TASK_PUSH_NOTIFICATION_CONFIG,
         CREATE_PUSH_NOTIFICATION_CONFIG,
         GET_PUSH_NOTIFICATION_CONFIG,
         LIST_PUSH_NOTIFICATION_CONFIGS,
