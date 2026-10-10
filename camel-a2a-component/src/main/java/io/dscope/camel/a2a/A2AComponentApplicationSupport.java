@@ -168,9 +168,13 @@ public class A2AComponentApplicationSupport {
             Map.entry(A2AProtocolMethods.CANCEL_TASK, cancelTaskProcessor),
             Map.entry(A2AProtocolMethods.SUBSCRIBE_TO_TASK, subscribeToTaskProcessor),
             Map.entry(A2AProtocolMethods.CREATE_PUSH_NOTIFICATION_CONFIG, createPushConfigProcessor),
+            Map.entry(A2AProtocolMethods.CREATE_TASK_PUSH_NOTIFICATION_CONFIG, createPushConfigProcessor),
             Map.entry(A2AProtocolMethods.GET_PUSH_NOTIFICATION_CONFIG, getPushConfigProcessor),
+            Map.entry(A2AProtocolMethods.GET_TASK_PUSH_NOTIFICATION_CONFIG, getPushConfigProcessor),
             Map.entry(A2AProtocolMethods.LIST_PUSH_NOTIFICATION_CONFIGS, listPushConfigsProcessor),
+            Map.entry(A2AProtocolMethods.LIST_TASK_PUSH_NOTIFICATION_CONFIGS, listPushConfigsProcessor),
             Map.entry(A2AProtocolMethods.DELETE_PUSH_NOTIFICATION_CONFIG, deletePushConfigProcessor),
+            Map.entry(A2AProtocolMethods.DELETE_TASK_PUSH_NOTIFICATION_CONFIG, deletePushConfigProcessor),
             Map.entry(A2AProtocolMethods.GET_EXTENDED_AGENT_CARD, getExtendedAgentCardProcessor)
         );
 

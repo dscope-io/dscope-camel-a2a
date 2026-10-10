@@ -6,7 +6,6 @@ import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.Task;
 import io.dscope.camel.a2a.model.dto.GetTaskRequest;
-import io.dscope.camel.a2a.model.dto.GetTaskResponse;
 import io.dscope.camel.a2a.service.A2ATaskService;
 
 /**
@@ -33,8 +32,6 @@ public class GetTaskProcessor implements Processor {
         }
 
         Task task = taskService.getTask(request.getTaskId());
-        GetTaskResponse response = new GetTaskResponse();
-        response.setTask(task);
-        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, task);
     }
 }

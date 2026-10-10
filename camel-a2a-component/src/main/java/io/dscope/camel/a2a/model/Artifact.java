@@ -1,5 +1,6 @@
 package io.dscope.camel.a2a.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ public class Artifact {
     private List<Part> parts;
     private Map<String, Object> metadata;
     private String createdAt;
+    private List<String> extensions;
 
     public String getArtifactId() {
         return artifactId;
@@ -55,11 +57,21 @@ public class Artifact {
         this.metadata = metadata;
     }
 
+    @JsonIgnore
     public String getCreatedAt() {
         return createdAt;
     }
 
+    @JsonIgnore
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<String> getExtensions() {
+        return extensions;
+    }
+
+    public void setExtensions(List<String> extensions) {
+        this.extensions = extensions;
     }
 }

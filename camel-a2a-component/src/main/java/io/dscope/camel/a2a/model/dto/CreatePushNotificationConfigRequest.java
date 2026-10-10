@@ -1,5 +1,7 @@
 package io.dscope.camel.a2a.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
@@ -24,10 +26,13 @@ public class CreatePushNotificationConfigRequest {
         this.taskId = taskId;
     }
 
+    @JsonProperty("url")
+    @JsonAlias("endpointUrl")
     public String getEndpointUrl() {
         return endpointUrl;
     }
 
+    @JsonProperty("url")
     public void setEndpointUrl(String endpointUrl) {
         this.endpointUrl = endpointUrl;
     }

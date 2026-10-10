@@ -6,7 +6,6 @@ import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.Task;
 import io.dscope.camel.a2a.model.dto.CancelTaskRequest;
-import io.dscope.camel.a2a.model.dto.CancelTaskResponse;
 import io.dscope.camel.a2a.service.A2ATaskService;
 
 /**
@@ -33,9 +32,6 @@ public class CancelTaskProcessor implements Processor {
         }
 
         Task task = taskService.cancelTask(request);
-        CancelTaskResponse response = new CancelTaskResponse();
-        response.setTask(task);
-        response.setCanceled(true);
-        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+        exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, task);
     }
 }

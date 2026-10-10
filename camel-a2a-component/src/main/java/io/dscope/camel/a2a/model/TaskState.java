@@ -39,9 +39,9 @@ public enum TaskState {
         }
         String normalized = value.startsWith("TASK_STATE_") ? value.substring("TASK_STATE_".length()) : value;
         return switch (normalized) {
-            case "SUBMITTED" -> SUBMITTED;
-            case "WORKING" -> WORKING;
-            case "INPUT_REQUIRED" -> INPUT_REQUIRED;
+            case "SUBMITTED" -> CREATED;
+            case "WORKING" -> RUNNING;
+            case "INPUT_REQUIRED" -> WAITING;
             case "AUTH_REQUIRED" -> AUTH_REQUIRED;
             case "REJECTED" -> REJECTED;
             case "COMPLETED" -> COMPLETED;

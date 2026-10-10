@@ -69,6 +69,6 @@ class A2AErrorProcessorTest {
         assertEquals("boom", node.get("error").get("message").asText());
         assertTrue(node.has("id"));
         assertTrue(node.get("id").isNull());
-        assertEquals("application/json", exchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
+        assertEquals("application/a2a+json", exchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
     }
 }

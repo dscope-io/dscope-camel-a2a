@@ -5,6 +5,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.catalog.AgentCardCatalog;
 import io.dscope.camel.a2a.model.AgentCard;
+import io.dscope.camel.a2a.config.A2AProtocolDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ public class AgentCardDiscoveryProcessor implements Processor {
             if (signature != null) {
                 exchange.getMessage().setHeader("X-A2A-AgentCard-Signature", signature);
             }
-            exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "application/json");
+            exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, A2AProtocolDefaults.JSON_CONTENT_TYPE);
             exchange.getMessage().setBody(mapper.writeValueAsString(card));
             LOG.debug("Discovery card response written for exchangeId={}, signaturePresent={}",
                 exchange.getExchangeId(),

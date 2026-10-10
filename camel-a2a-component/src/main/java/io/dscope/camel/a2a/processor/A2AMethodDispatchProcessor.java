@@ -5,6 +5,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.config.A2AProtocolDefaults;
+import io.dscope.camel.a2a.config.A2AProtocolDefaults;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class A2AMethodDispatchProcessor implements Processor {
         envelope.put("jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION);
         envelope.put("result", result);
         envelope.put("id", id);
-        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, A2AProtocolDefaults.JSON_CONTENT_TYPE);
         exchange.getMessage().setBody(mapper.writeValueAsString(envelope));
     }
 }

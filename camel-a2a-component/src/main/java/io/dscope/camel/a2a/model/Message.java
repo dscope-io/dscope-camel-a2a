@@ -112,7 +112,7 @@ public class Message {
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
-}
+
     public List<String> getExtensions() {
         return extensions;
     }
@@ -128,3 +128,4 @@ public class Message {
     public void setReferenceTaskIds(List<String> referenceTaskIds) {
         this.referenceTaskIds = referenceTaskIds;
     }
+}

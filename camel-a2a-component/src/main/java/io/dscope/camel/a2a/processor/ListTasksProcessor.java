@@ -29,8 +29,11 @@ public class ListTasksProcessor implements Processor {
         }
 
         ListTasksResponse response = new ListTasksResponse();
-        response.setTasks(taskService.listTasks(request));
+        var tasks = taskService.listTasks(request);
+        response.setTasks(tasks);
         response.setNextCursor(null);
+        response.setPageSize(request.getLimit() == null ? tasks.size() : request.getLimit());
+        response.setTotalSize(tasks.size());
         exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
     }
 }

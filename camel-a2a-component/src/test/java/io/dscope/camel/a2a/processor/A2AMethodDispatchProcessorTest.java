@@ -66,9 +66,13 @@ class A2AMethodDispatchProcessorTest {
             Map.entry(A2AProtocolMethods.CANCEL_TASK, new CancelTaskProcessor(taskService)),
             Map.entry(A2AProtocolMethods.SUBSCRIBE_TO_TASK, new SubscribeToTaskProcessor(taskService, eventService)),
             Map.entry(A2AProtocolMethods.CREATE_PUSH_NOTIFICATION_CONFIG, new CreatePushNotificationConfigProcessor(pushConfigService)),
+            Map.entry(A2AProtocolMethods.CREATE_TASK_PUSH_NOTIFICATION_CONFIG, new CreatePushNotificationConfigProcessor(pushConfigService)),
             Map.entry(A2AProtocolMethods.GET_PUSH_NOTIFICATION_CONFIG, new GetPushNotificationConfigProcessor(pushConfigService)),
+            Map.entry(A2AProtocolMethods.GET_TASK_PUSH_NOTIFICATION_CONFIG, new GetPushNotificationConfigProcessor(pushConfigService)),
             Map.entry(A2AProtocolMethods.LIST_PUSH_NOTIFICATION_CONFIGS, new ListPushNotificationConfigsProcessor(pushConfigService)),
+            Map.entry(A2AProtocolMethods.LIST_TASK_PUSH_NOTIFICATION_CONFIGS, new ListPushNotificationConfigsProcessor(pushConfigService)),
             Map.entry(A2AProtocolMethods.DELETE_PUSH_NOTIFICATION_CONFIG, new DeletePushNotificationConfigProcessor(pushConfigService)),
+            Map.entry(A2AProtocolMethods.DELETE_TASK_PUSH_NOTIFICATION_CONFIG, new DeletePushNotificationConfigProcessor(pushConfigService)),
             Map.entry(A2AProtocolMethods.GET_EXTENDED_AGENT_CARD, new GetExtendedAgentCardProcessor(agentCardCatalog))
         ));
         errorProcessor = new A2AErrorProcessor();
@@ -79,16 +83,16 @@ class A2AMethodDispatchProcessorTest {
         JsonNode sendResponse = execute("""
             {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello"}]},"metadata":{"source":"test"}},"id":"1"}
             """);
-        String taskId = sendResponse.get("result").get("task").get("taskId").asText();
+        String taskId = sendResponse.get("result").get("id").asText();
         assertFalse(taskId.isBlank());
 
         JsonNode getResponse = execute("""
-            {"jsonrpc":"2.0","method":"GetTask","params":{"taskId":"%s"},"id":"2"}
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s"},"id":"2"}
             """.formatted(taskId));
-        assertEquals(taskId, getResponse.get("result").get("task").get("taskId").asText());
+        assertEquals(taskId, getResponse.get("result").get("id").asText());
 
         JsonNode listResponse = execute("""
-            {"jsonrpc":"2.0","method":"ListTasks","params":{"limit":10},"id":"3"}
+            {"jsonrpc":"2.0","method":"ListTasks","params":{"pageSize":10},"id":"3"}
             """);
         assertTrue(listResponse.get("result").get("tasks").isArray());
         assertTrue(listResponse.get("result").get("tasks").size() >= 1);
@@ -96,8 +100,7 @@ class A2AMethodDispatchProcessorTest {
         JsonNode cancelResponse = execute("""
             {"jsonrpc":"2.0","method":"CancelTask","params":{"taskId":"%s","reason":"user requested"},"id":"4"}
             """.formatted(taskId));
-        assertTrue(cancelResponse.get("result").get("canceled").asBoolean());
-        assertEquals("CANCELED", cancelResponse.get("result").get("task").get("status").get("state").asText());
+        assertEquals("TASK_STATE_CANCELED", cancelResponse.get("result").get("status").get("state").asText());
     }
 
     @Test
@@ -184,11 +187,11 @@ class A2AMethodDispatchProcessorTest {
 
         assertEquals("2.0", response.get("jsonrpc").asText());
         assertEquals("36", response.get("id").asText());
-        JsonNode card = response.get("result").get("agentCard");
-        assertEquals("test-agent", card.get("agentId").asText());
+        JsonNode card = response.get("result");
+        assertEquals("http://localhost:8081/a2a/rpc",
+            card.get("supportedInterfaces").get(0).get("url").asText());
         assertTrue(card.get("capabilities").get("streaming").asBoolean());
         assertTrue(card.get("securitySchemes").has("bearerAuth"));
-        assertTrue(card.get("metadata").get("extended").asBoolean());
     }
 
     @Test
@@ -205,6 +208,10 @@ class A2AMethodDispatchProcessorTest {
             A2AProtocolMethods.LIST_PUSH_NOTIFICATION_CONFIGS,
             A2AProtocolMethods.DELETE_PUSH_NOTIFICATION_CONFIG,
             A2AProtocolMethods.GET_EXTENDED_AGENT_CARD
+            , A2AProtocolMethods.CREATE_TASK_PUSH_NOTIFICATION_CONFIG,
+            A2AProtocolMethods.GET_TASK_PUSH_NOTIFICATION_CONFIG,
+            A2AProtocolMethods.LIST_TASK_PUSH_NOTIFICATION_CONFIGS,
+            A2AProtocolMethods.DELETE_TASK_PUSH_NOTIFICATION_CONFIG
         );
         Set<String> expected = new HashSet<>(A2AProtocolMethods.CORE_METHODS);
         expected.remove(A2AProtocolMethods.LEGACY_INTENT_EXECUTE);
@@ -213,7 +220,7 @@ class A2AMethodDispatchProcessorTest {
         JsonNode send = execute("""
             {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"contract-m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello"}]}},"id":"c1"}
             """);
-        String taskId = send.get("result").get("task").get("taskId").asText();
+        String taskId = send.get("result").get("id").asText();
 
         JsonNode stream = execute("""
             {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"contract-stream","role":"user","parts":[{"partId":"p1","type":"text","text":"stream"}]}},"id":"c2"}
@@ -222,7 +229,7 @@ class A2AMethodDispatchProcessorTest {
         String configTaskId = taskId.isBlank() ? streamingTaskId : taskId;
 
         assertEquals("2.0", execute("""
-            {"jsonrpc":"2.0","method":"GetTask","params":{"taskId":"%s"},"id":"c3"}
+            {"jsonrpc":"2.0","method":"GetTask","params":{"id":"%s"},"id":"c3"}
             """.formatted(taskId)).get("jsonrpc").asText());
         assertEquals("2.0", execute("""
             {"jsonrpc":"2.0","method":"ListTasks","params":{"limit":10},"id":"c4"}

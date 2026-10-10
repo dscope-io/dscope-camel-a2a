@@ -6,6 +6,8 @@
 
 Apache Camel component and sample runtime for Agent-to-Agent (A2A) protocol workflows.
 
+The protocol compatibility target is A2A `1.0.1`.
+
 Current release baseline:
 
 - Camel A2A version `1.1.0`

@@ -66,6 +66,11 @@ class A2ADomainModelSerializationTest {
         card.setName("Assistant Agent");
         card.setDescription("Handles task-oriented requests");
         card.setEndpointUrl("https://example.org/a2a");
+        AgentInterface agentInterface = new AgentInterface();
+        agentInterface.setUrl("https://example.org/a2a");
+        agentInterface.setProtocolBinding("JSONRPC");
+        agentInterface.setProtocolVersion("1.0");
+        card.setSupportedInterfaces(List.of(agentInterface));
         card.setVersion("0.5.0");
         card.setCapabilities(capabilities);
         card.setSecuritySchemes(Map.of("bearerAuth", bearer));
@@ -76,11 +81,11 @@ class A2ADomainModelSerializationTest {
         String json = codec.serialize(card);
         AgentCard restored = codec.deserialize(json, AgentCard.class);
 
-        assertEquals("assistant-agent", restored.getAgentId());
+        assertEquals("https://example.org/a2a", restored.getSupportedInterfaces().get(0).getUrl());
         assertTrue(restored.getCapabilities().isStreaming());
         assertTrue(restored.getCapabilities().isPushNotifications());
         assertEquals("bearer", restored.getSecuritySchemes().get("bearerAuth").getScheme());
-        assertEquals("dscope", restored.getMetadata().get("team"));
+        assertFalse(codec.deserialize(json, com.fasterxml.jackson.databind.JsonNode.class).has("metadata"));
     }
 
     @Test

@@ -7,7 +7,6 @@ import io.dscope.camel.a2a.catalog.AgentCardCatalog;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.AgentCard;
 import io.dscope.camel.a2a.model.dto.GetExtendedAgentCardRequest;
-import io.dscope.camel.a2a.model.dto.GetExtendedAgentCardResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +38,7 @@ public class GetExtendedAgentCardProcessor implements Processor {
                 exchange.getExchangeId(),
                 includeSignature);
 
-            GetExtendedAgentCardResponse response = new GetExtendedAgentCardResponse();
-            response.setAgentCard(card);
-            if (includeSignature) {
-                response.setSignature(cardCatalog.getCardSignature(card));
-            }
-            exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, response);
+            exchange.setProperty(A2AExchangeProperties.METHOD_RESULT, card);
             LOG.debug("Extended agent card response prepared for exchangeId={}, signatureIncluded={}",
                 exchange.getExchangeId(),
                 includeSignature);
