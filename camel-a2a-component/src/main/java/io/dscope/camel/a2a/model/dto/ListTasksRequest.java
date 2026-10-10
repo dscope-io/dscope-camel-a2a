@@ -14,6 +14,7 @@ public class ListTasksRequest {
     private String contextId;
     private Integer historyLength;
     private Boolean includeArtifacts;
+    private String statusTimestampAfter;
 
     @JsonProperty("pageSize")
     @JsonAlias("limit")
@@ -80,5 +81,13 @@ public class ListTasksRequest {
 
     public void setIncludeArtifacts(Boolean includeArtifacts) {
         this.includeArtifacts = includeArtifacts;
+    }
+
+    public String getStatusTimestampAfter() {
+        return statusTimestampAfter;
+    }
+
+    public void setStatusTimestampAfter(String statusTimestampAfter) {
+        this.statusTimestampAfter = statusTimestampAfter;
     }
 }

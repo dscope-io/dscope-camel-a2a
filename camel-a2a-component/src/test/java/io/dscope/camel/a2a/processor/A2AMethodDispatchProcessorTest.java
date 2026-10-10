@@ -125,23 +125,64 @@ class A2AMethodDispatchProcessorTest {
     }
 
     @Test
-    void sendStreamingAndSubscribeReturnSseTaskResponses() throws Exception {
+    void sendStreamingAndSubscribeReturnSseStatusUpdates() throws Exception {
         Exchange streamingExchange = executeExchange("""
             {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"stream-m1","role":"user","parts":[{"partId":"p1","type":"text","text":"hello stream"}]}},"id":"21"}
             """);
         assertEquals("text/event-stream", streamingExchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
-        JsonNode streamingResponse = readSseResponse(streamingExchange);
-        String taskId = streamingResponse.get("result").get("task").get("id").asText();
+        var streamingResponses = readSseResponses(streamingExchange);
+        assertTrue(streamingResponses.size() >= 4);
+        String taskId = streamingResponses.get(0).path("result").path("statusUpdate").path("taskId").asText();
 
         assertFalse(taskId.isBlank());
         assertEquals("TASK_STATE_COMPLETED",
-            streamingResponse.get("result").get("task").get("status").get("state").asText());
+            streamingResponses.get(streamingResponses.size() - 1).path("result")
+                .path("statusUpdate").path("status").path("state").asText());
+
+        JsonNode send = execute("""
+            {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"subscribe-m1","role":"user","parts":[{"text":"still running"}]}},"id":"subscribe-send"}
+            """);
+        String activeTaskId = send.path("result").path("id").asText();
 
         Exchange subscribeExchange = executeExchange("""
-            {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"taskId":"%s","afterSequence":0,"limit":20},"id":"22"}
-            """.formatted(taskId));
+            {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"id":"%s"},"id":"22"}
+            """.formatted(activeTaskId));
         assertEquals("text/event-stream", subscribeExchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
-        assertEquals(taskId, readSseResponse(subscribeExchange).get("result").get("task").get("id").asText());
+        assertEquals(activeTaskId, readSseResponse(subscribeExchange).path("result")
+            .path("statusUpdate").path("taskId").asText());
+
+        JsonNode terminalSubscribe = execute("""
+            {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"id":"%s"},"id":"23"}
+            """.formatted(taskId));
+        assertEquals(-32004, terminalSubscribe.path("error").path("code").asInt());
+    }
+
+    @Test
+    void listTasksFiltersAndPaginatesWithProtocolFields() throws Exception {
+        String contextId = "context-page";
+        String firstTaskId = createTask("page-1", contextId);
+        String secondTaskId = createTask("page-2", contextId);
+
+        JsonNode firstPage = execute("""
+            {"jsonrpc":"2.0","method":"ListTasks","params":{"contextId":"%s","pageSize":1,"historyLength":0},"id":"page-1"}
+            """.formatted(contextId));
+        JsonNode firstResult = firstPage.path("result");
+        assertEquals(2, firstResult.path("totalSize").asInt());
+        assertEquals(1, firstResult.path("pageSize").asInt());
+        assertEquals(1, firstResult.path("tasks").size());
+        assertFalse(firstResult.path("nextPageToken").asText().isBlank());
+        assertEquals(contextId, firstResult.path("tasks").get(0).path("contextId").asText());
+        assertEquals(0, firstResult.path("tasks").get(0).path("history").size());
+
+        JsonNode secondPage = execute("""
+            {"jsonrpc":"2.0","method":"ListTasks","params":{"contextId":"%s","pageSize":1,"pageToken":"%s"},"id":"page-2"}
+            """.formatted(contextId, firstResult.path("nextPageToken").asText()));
+        JsonNode secondResult = secondPage.path("result");
+        assertEquals(1, secondResult.path("tasks").size());
+        assertTrue(secondResult.path("nextPageToken").asText().isBlank());
+        assertNotEquals(firstResult.path("tasks").get(0).path("id").asText(),
+            secondResult.path("tasks").get(0).path("id").asText());
+        assertTrue(Set.of(firstTaskId, secondTaskId).contains(secondResult.path("tasks").get(0).path("id").asText()));
     }
 
     @Test
@@ -249,7 +290,7 @@ class A2AMethodDispatchProcessorTest {
         JsonNode stream = execute("""
             {"jsonrpc":"2.0","method":"SendStreamingMessage","params":{"message":{"messageId":"contract-stream","role":"user","parts":[{"partId":"p1","type":"text","text":"stream"}]}},"id":"c2"}
             """);
-        String streamingTaskId = stream.get("result").get("task").get("id").asText();
+        String streamingTaskId = stream.path("result").path("statusUpdate").path("taskId").asText();
         String configTaskId = taskId.isBlank() ? streamingTaskId : taskId;
 
         assertEquals("2.0", execute("""
@@ -261,9 +302,13 @@ class A2AMethodDispatchProcessorTest {
         assertEquals("2.0", execute("""
             {"jsonrpc":"2.0","method":"CancelTask","params":{"taskId":"%s","reason":"contract"},"id":"c5"}
             """.formatted(taskId)).get("jsonrpc").asText());
-        assertEquals("2.0", execute("""
-            {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"taskId":"%s","afterSequence":0,"limit":25},"id":"c6"}
-            """.formatted(streamingTaskId)).get("jsonrpc").asText());
+        JsonNode subscribableTask = execute("""
+            {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"contract-subscribe","role":"user","parts":[{"text":"subscribe me"}]}},"id":"c6-create"}
+            """);
+        String subscribableTaskId = subscribableTask.path("result").path("id").asText();
+        assertEquals("text/event-stream", executeExchange("""
+            {"jsonrpc":"2.0","method":"SubscribeToTask","params":{"id":"%s"},"id":"c6"}
+            """.formatted(subscribableTaskId)).getMessage().getHeader(Exchange.CONTENT_TYPE));
 
         JsonNode create = execute("""
             {"jsonrpc":"2.0","method":"CreatePushNotificationConfig","params":{"taskId":"%s","endpointUrl":"https://example.test/contract","maxRetries":1,"retryBackoffMs":0},"id":"c7"}
@@ -287,10 +332,14 @@ class A2AMethodDispatchProcessorTest {
     private JsonNode execute(String payload) throws Exception {
         Exchange exchange = executeExchange(payload);
         String responseBody = exchange.getMessage().getBody(String.class);
-        if (responseBody.startsWith("data: ")) {
-            responseBody = responseBody.substring(6).trim();
-        }
+        responseBody = firstSseData(responseBody);
         return mapper.readTree(responseBody);
+    }
+
+    private String createTask(String messageId, String contextId) throws Exception {
+        return execute("""
+            {"jsonrpc":"2.0","method":"SendMessage","params":{"message":{"messageId":"%s","contextId":"%s","role":"user","parts":[{"text":"page task"}]}},"id":"%s"}
+            """.formatted(messageId, contextId, messageId)).path("result").path("id").asText();
     }
 
     private Exchange executeExchange(String payload) throws Exception {
@@ -308,6 +357,28 @@ class A2AMethodDispatchProcessorTest {
 
     private JsonNode readSseResponse(Exchange exchange) throws Exception {
         String body = exchange.getMessage().getBody(String.class);
-        return mapper.readTree(body.substring("data: ".length()).trim());
+        return mapper.readTree(firstSseData(body));
+    }
+
+    private java.util.List<JsonNode> readSseResponses(Exchange exchange) throws Exception {
+        String body = exchange.getMessage().getBody(String.class);
+        return java.util.Arrays.stream(body.split("\\n\\n"))
+            .filter(event -> event.startsWith("data: "))
+            .map(event -> event.substring("data: ".length()))
+            .map(data -> {
+                try {
+                    return mapper.readTree(data);
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            })
+            .toList();
+    }
+
+    private String firstSseData(String body) {
+        if (!body.startsWith("data: ")) {
+            return body;
+        }
+        return body.substring("data: ".length(), body.indexOf("\n\n")).trim();
     }
 }

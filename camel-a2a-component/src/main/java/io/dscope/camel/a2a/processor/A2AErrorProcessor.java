@@ -41,6 +41,9 @@ public class A2AErrorProcessor implements Processor {
         if (error instanceof A2AIllegalTaskStateException) {
             return -32002;
         }
+        if (error instanceof A2AUnsupportedOperationException) {
+            return -32004;
+        }
         if (error instanceof A2AInvalidParamsException) {
             if (error.getMessage() != null && error.getMessage().startsWith("Task not found:")) {
                 return -32001;

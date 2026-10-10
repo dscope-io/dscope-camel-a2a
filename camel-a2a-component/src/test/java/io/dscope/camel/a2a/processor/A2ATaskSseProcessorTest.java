@@ -8,7 +8,6 @@ import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.model.Task;
 import io.dscope.camel.a2a.model.TaskState;
 import io.dscope.camel.a2a.model.TaskStatus;
-import io.dscope.camel.a2a.model.dto.SendStreamingMessageResponse;
 import io.dscope.camel.a2a.service.InMemoryA2ATaskService;
 import io.dscope.camel.a2a.service.InMemoryTaskEventService;
 
@@ -42,7 +41,7 @@ class A2ATaskSseProcessorTest {
     }
 
     @Test
-    void processHandlesStreamingSubscriptionAndCleansTerminalSubscriber() throws Exception {
+    void sendStreamingProducesProtocolStatusUpdates() throws Exception {
         InMemoryTaskEventService eventService = new InMemoryTaskEventService();
         InMemoryA2ATaskService taskService = new InMemoryA2ATaskService(eventService);
         SendStreamingMessageProcessor streamingProcessor = new SendStreamingMessageProcessor(taskService, eventService);
@@ -57,25 +56,12 @@ class A2ATaskSseProcessorTest {
         ));
         streamingProcessor.process(streamingExchange);
 
-        SendStreamingMessageResponse response =
-            streamingExchange.getProperty(A2AExchangeProperties.METHOD_RESULT, SendStreamingMessageResponse.class);
-        assertNotNull(response);
-        assertNotNull(eventService.getSubscription(response.getSubscriptionId()));
-
-        A2ATaskSseProcessor processor = new A2ATaskSseProcessor(eventService);
-        Exchange sseExchange = new DefaultExchange(new DefaultCamelContext());
-        sseExchange.getIn().setHeader("taskId", response.getTask().getTaskId());
-        sseExchange.getIn().setHeader("subscriptionId", response.getSubscriptionId());
-        sseExchange.getIn().setHeader("afterSequence", "0");
-        sseExchange.getIn().setHeader("limit", "100");
-
-        processor.process(sseExchange);
-
-        String payload = sseExchange.getMessage().getBody(String.class);
-        assertTrue(payload.contains("event: task.status"));
-        assertTrue(payload.contains("event: close"));
-        assertEquals("text/event-stream", sseExchange.getMessage().getHeader(Exchange.CONTENT_TYPE));
-        assertNull(eventService.getSubscription(response.getSubscriptionId()));
+        List<?> responses = streamingExchange.getProperty(A2AExchangeProperties.METHOD_RESULT, List.class);
+        assertNotNull(responses);
+        assertTrue(responses.size() >= 4);
+        Map<?, ?> lastResponse = (Map<?, ?>) responses.get(responses.size() - 1);
+        Object update = lastResponse.get("statusUpdate");
+        assertNotNull(update);
     }
 
     private Task task(String taskId, TaskState state, String message) {

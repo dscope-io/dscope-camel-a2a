@@ -6,11 +6,8 @@ import org.apache.camel.Processor;
 import io.dscope.camel.a2a.config.A2AExchangeProperties;
 import io.dscope.camel.a2a.config.A2AProtocolDefaults;
 import io.dscope.camel.a2a.config.A2AProtocolMethods;
-import io.dscope.camel.a2a.model.Task;
-import io.dscope.camel.a2a.model.dto.SendStreamingMessageResponse;
-import io.dscope.camel.a2a.model.dto.SubscribeToTaskResponse;
-
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -51,19 +48,20 @@ public class A2AMethodDispatchProcessor implements Processor {
 
         if (A2AProtocolMethods.SEND_STREAMING_MESSAGE.equals(method)
             || A2AProtocolMethods.SUBSCRIBE_TO_TASK.equals(method)) {
-            Task task = result instanceof SendStreamingMessageResponse streamingResponse
-                ? streamingResponse.getTask()
-                : result instanceof SubscribeToTaskResponse subscription ? subscription.getTask() : null;
-            if (task == null) {
-                throw new IllegalStateException("A2A stream response requires a task");
+            if (!(result instanceof List<?> streamResponses)) {
+                throw new IllegalStateException("A2A stream response requires a list of stream events");
             }
-            Map<String, Object> streamEnvelope = Map.of(
-                "jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION,
-                "result", Map.of("task", task),
-                "id", id == null ? "" : id
-            );
+            StringBuilder streamBody = new StringBuilder();
+            for (Object streamResponse : streamResponses) {
+                Map<String, Object> streamEnvelope = Map.of(
+                    "jsonrpc", A2AProtocolDefaults.JSONRPC_VERSION,
+                    "result", streamResponse,
+                    "id", id == null ? "" : id
+                );
+                streamBody.append("data: ").append(mapper.writeValueAsString(streamEnvelope)).append("\n\n");
+            }
             exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "text/event-stream");
-            exchange.getMessage().setBody("data: " + mapper.writeValueAsString(streamEnvelope) + "\n\n");
+            exchange.getMessage().setBody(streamBody.toString());
             return;
         }
 
